@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pHEX / PLS Oracle</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#06070D; --s1:#0C0E18; --s2:#111525; --s3:#161B2E;
+  --hex:#FF2D78; --hex-b:rgba(255,45,120,.18); --hex-bb:rgba(255,45,120,.32);
+  --pls:#7B5CFF; --pls-b:rgba(123,92,255,.15); --pls-bb:rgba(123,92,255,.28);
+  --grn:#00D4A0; --grn-b:rgba(0,212,160,.12);
+  --red:#FF3366; --red-b:rgba(255,51,102,.12);
+  --amb:#FFB800; --amb-b:rgba(255,184,0,.12);
+  --tx:#DDE2F2; --mu:#404866; --mu2:#5A6285; --dim:#161B2E; --br:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 28px;border-bottom:1px solid var(--br);background:rgba(6,7,13,.95);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100}
+.tl{display:flex;align-items:center;gap:12px}
+.brand{font-size:16px;font-weight:800;letter-spacing:-.4px}
+.brand span.h{color:var(--hex)} .brand span.d{color:var(--mu)} .brand span.p{color:var(--pls)}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--grn-b);border:1px solid rgba(0,212,160,.25);color:var(--grn);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:bk 1.4s ease infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.tr{display:flex;align-items:center;gap:14px}
+.upd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mu2)}
+.rfbtn{background:var(--pls-b);border:1px solid var(--pls-bb);color:var(--pls);padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.15s;display:flex;align-items:center;gap:5px}
+.rfbtn:hover{background:rgba(123,92,255,.25)}
+.rfbtn.sp .spin{animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── LAYOUT ── */
+main{max-width:1360px;margin:0 auto;padding:28px 24px 60px}
+
+/* ── HERO RATIO ── */
+.hero{background:var(--s1);border:1px solid var(--br);border-radius:20px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:600px;height:280px;background:radial-gradient(ellipse,rgba(255,45,120,.07) 0%,transparent 70%);pointer-events:none}
+.hero-eye{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;text-align:center;margin-bottom:14px}
+.ratio-hero{text-align:center;margin-bottom:6px}
+.ratio-num{font-family:'JetBrains Mono',monospace;font-size:72px;font-weight:700;letter-spacing:-3px;line-height:1;background:linear-gradient(135deg,var(--hex),var(--pls));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;min-height:72px}
+.ratio-unit{font-size:16px;color:var(--mu2);text-align:center;margin-bottom:18px;font-family:'JetBrains Mono',monospace}
+.tf-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.tf-pill{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--br);border-radius:10px;padding:10px 18px;min-width:80px}
+.tf-t{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.tf-v{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500}
+.tf-v.up{color:var(--grn)} .tf-v.dn{color:var(--red)} .tf-v.fl{color:var(--mu2)}
+
+/* ── PRICE ROW ── */
+.price-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.pcard{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:22px;position:relative;overflow:hidden}
+.pcard.phex::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--hex);box-shadow:0 0 16px var(--hex)}
+.pcard.ppls::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--pls);box-shadow:0 0 16px var(--pls)}
+.pc-eye{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--mu);text-transform:uppercase;margin-bottom:8px}
+.pc-price{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;letter-spacing:-1.5px;line-height:1;min-height:38px}
+.pc-chg{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;margin-top:10px}
+.pc-chg.up{background:var(--grn-b);color:var(--grn)} .pc-chg.dn{background:var(--red-b);color:var(--red)} .pc-chg.fl{background:var(--dim);color:var(--mu2)}
+.pc-stats{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.pc-stat{font-size:11px;color:var(--mu2)}
+.pc-stat b{color:var(--tx);font-weight:500}
+
+/* ── SECTION ── */
+.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--br)}
+
+/* ── VALUATION PANEL ── */
+.val-panel{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:24px;margin-bottom:20px}
+.gauge-outer{margin-bottom:20px}
+.gauge-track{height:10px;background:var(--s3);border-radius:10px;overflow:hidden;position:relative;margin:8px 0}
+.gauge-fill{height:100%;border-radius:10px;transition:width .8s cubic-bezier(.4,0,.2,1),background .8s}
+.gauge-ends{display:flex;justify-content:space-between;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--mu);margin-top:3px}
+.gauge-pointer{text-align:center;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mu2)}
+.verdict-box{border-radius:12px;padding:16px 20px;display:flex;align-items:flex-start;gap:12px}
+.verdict-box.cheap{background:var(--grn-b);border:1px solid rgba(0,212,160,.2)}
+.verdict-box.fair{background:var(--s2);border:1px solid var(--br)}
+.verdict-box.dear{background:var(--red-b);border:1px solid rgba(255,51,102,.2)}
+.verdict-box.warn{background:var(--amb-b);border:1px solid rgba(255,184,0,.2)}
+.verdict-icon{font-size:24px;line-height:1;flex-shrink:0}
+.verdict-body{}
+.verdict-head{font-size:15px;font-weight:700;margin-bottom:5px}
+.verdict-cheap .verdict-head{color:var(--grn)}
+.verdict-dear .verdict-head{color:var(--red)}
+.verdict-warn .verdict-head{color:var(--amb)}
+.verdict-body p{font-size:12px;color:var(--mu2);line-height:1.7}
+
+/* ── METRICS ROW ── */
+.metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px}
+.metric{background:var(--s2);border-radius:10px;padding:14px}
+.m-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.m-value{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;color:var(--tx)}
+.m-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+
+/* ── CALCULATOR ── */
+.calc-panel{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:24px;margin-bottom:20px}
+.calc-toggle{display:flex;background:var(--s3);border-radius:10px;padding:3px;margin-bottom:20px;width:fit-content}
+.ct-btn{padding:8px 18px;border-radius:8px;border:none;background:none;color:var(--mu2);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.ct-btn.active{background:var(--pls);color:#fff;box-shadow:0 2px 10px rgba(123,92,255,.4)}
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.cf{display:flex;flex-direction:column;gap:6px}
+.cf label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.cf-wrap{position:relative}
+.cf-pre{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--mu2);pointer-events:none}
+.ci{width:100%;background:var(--s3);border:1px solid var(--br);border-radius:8px;padding:10px 12px 10px 26px;font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--tx);outline:none;transition:border-color .15s}
+.ci:focus{border-color:var(--pls)}
+.ci-plain{padding-left:12px}
+.out-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.out-card{background:var(--s2);border-radius:12px;padding:14px 16px;border:1px solid transparent;transition:border-color .2s}
+.out-card.star{border-color:var(--pls)}
+.oc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.oc-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--tx)}
+.oc-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+.oc-chg{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-top:5px}
+.oc-chg.up{color:var(--grn)} .oc-chg.dn{color:var(--red)}
+
+/* ── SCENARIO MATRIX ── */
+.matrix-panel{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:24px;margin-bottom:20px;overflow-x:auto}
+.mat-note{font-size:11px;color:var(--mu2);margin-bottom:14px}
+table.mat{border-collapse:collapse;font-size:12px;min-width:600px;width:100%}
+table.mat th{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--br);text-align:center;white-space:nowrap}
+table.mat th:first-child{text-align:left}
+table.mat td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:12px;text-align:center}
+table.mat td:first-child{text-align:left;color:var(--hex);font-weight:600}
+table.mat tr:hover td{background:var(--s2)}
+table.mat tr.cur td{background:var(--s2);font-weight:700}
+.cell-above{color:var(--grn)} .cell-same{color:var(--mu2)} .cell-below{color:var(--red)}
+.cur-row{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--hex-b);color:var(--hex);margin-left:6px;letter-spacing:.5px}
+
+/* ── LP POOL ── */
+.lp-panel{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:24px;margin-bottom:20px}
+.lp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.lp-card{background:var(--s2);border-radius:10px;padding:14px}
+.lp-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.lp-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500}
+.lp-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+.vol-ratio{margin-top:10px;height:4px;background:var(--s3);border-radius:4px;overflow:hidden}
+.vol-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--hex),var(--pls));transition:width .8s ease}
+
+/* ── SKELETON ── */
+.sk{background:var(--s3);border-radius:4px;animation:sh 1.6s infinite;display:inline-block}
+@keyframes sh{0%,100%{opacity:.4}50%{opacity:.7}}
+
+/* ── FOOTER ── */
+.foot{margin-top:36px;padding-top:18px;border-top:1px solid var(--br);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.foot-note{font-size:11px;color:var(--mu);line-height:1.7}
+.foot-note a{color:var(--pls);text-decoration:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.price-row{grid-template-columns:1fr}.ratio-num{font-size:52px}}
+@media(max-width:640px){main{padding:18px 14px 40px}.topbar{padding:12px 16px}.ratio-num{font-size:40px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tl">
+    <div class="brand"><span class="h">pHEX</span><span class="d"> / </span><span class="p">PLS</span> Oracle</div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <div class="tr">
+    <span class="upd" id="updEl">Connecting…</span>
+    <button class="rfbtn" id="rfBtn" onclick="loadAll()"><span class="spin">↻</span> Refresh</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ── HERO RATIO ── -->
+<div class="hero">
+  <div class="hero-eye">Core Relationship — How many PLS tokens equal 1 pHEX</div>
+  <div class="ratio-hero">
+    <div class="ratio-num" id="ratioNum"><span class="sk" style="width:280px;height:68px;border-radius:8px"></span></div>
+  </div>
+  <div class="ratio-unit" id="ratioUnit">PLS per pHEX</div>
+  <div class="tf-row" id="tfRow">
+    <div class="tf-pill"><div class="tf-t">5m</div><div class="tf-v fl sk" style="width:50px;height:15px"></div></div>
+    <div class="tf-pill"><div class="tf-t">1h</div><div class="tf-v fl sk" style="width:50px;height:15px"></div></div>
+    <div class="tf-pill"><div class="tf-t">6h</div><div class="tf-v fl sk" style="width:50px;height:15px"></div></div>
+    <div class="tf-pill"><div class="tf-t">24h</div><div class="tf-v fl sk" style="width:50px;height:15px"></div></div>
+  </div>
+</div>
+
+<!-- ── PRICES ── -->
+<div class="price-row">
+  <div class="pcard phex">
+    <div class="pc-eye">pHEX · PulseChain</div>
+    <div class="pc-price" id="hexPriceEl"><span class="sk" style="width:180px;height:36px;border-radius:6px"></span></div>
+    <div class="pc-chg fl" id="hexChgEl">—</div>
+    <div class="pc-stats" id="hexStatsEl"></div>
+  </div>
+  <div class="pcard ppls">
+    <div class="pc-eye">PLS · PulseChain</div>
+    <div class="pc-price" id="plsPriceEl"><span class="sk" style="width:180px;height:36px;border-radius:6px"></span></div>
+    <div class="pc-chg fl" id="plsChgEl">—</div>
+    <div class="pc-stats" id="plsStatsEl"></div>
+  </div>
+</div>
+
+<!-- ── VALUATION ── -->
+<div class="val-panel">
+  <div class="sec-hd"><div class="sec-title">Is PLS Cheap or Expensive vs pHEX Right Now?</div><div class="sec-line"></div></div>
+
+  <div class="gauge-outer">
+    <div class="gauge-ends">
+      <span>PLS very cheap (ratio high)</span>
+      <span>Balanced</span>
+      <span>PLS very expensive (ratio low)</span>
+    </div>
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gaugeFill" style="width:50%;background:var(--amb)"></div>
+    </div>
+    <div class="gauge-pointer" id="gaugePointer">Calculating…</div>
+  </div>
+
+  <div class="verdict-box fair" id="verdictBox">
+    <div class="verdict-icon">⏳</div>
+    <div class="verdict-body">
+      <div class="verdict-head" id="verdictHead">Loading…</div>
+      <p id="verdictText">Fetching live data from PulseX…</p>
+    </div>
+  </div>
+
+  <div class="metrics-row" id="metricsRow">
+    <div class="metric"><div class="m-label">Current ratio</div><div class="m-value sk" style="width:80px;height:20px"></div></div>
+    <div class="metric"><div class="m-label">24h ratio change</div><div class="m-value sk" style="width:80px;height:20px"></div></div>
+    <div class="metric"><div class="m-label">pHEX market cap</div><div class="m-value sk" style="width:80px;height:20px"></div></div>
+    <div class="metric"><div class="m-label">PLS market cap est.</div><div class="m-value sk" style="width:80px;height:20px"></div></div>
+    <div class="metric"><div class="m-label">Relative strength 24h</div><div class="m-value sk" style="width:80px;height:20px"></div></div>
+  </div>
+</div>
+
+<!-- ── CALCULATOR ── -->
+<div class="calc-panel">
+  <div class="sec-hd"><div class="sec-title">Bidirectional Price Calculator</div><div class="sec-line"></div></div>
+
+  <div class="calc-toggle">
+    <button class="ct-btn active" id="modeBtnA" onclick="setMode('A')">Set pHEX → Find PLS</button>
+    <button class="ct-btn" id="modeBtnB" onclick="setMode('B')">Set PLS → Find pHEX</button>
+  </div>
+
+  <div class="calc-grid" id="calcFields"></div>
+  <div class="out-grid" id="calcOutputs"></div>
+</div>
+
+<!-- ── SCENARIO MATRIX ── -->
+<div class="matrix-panel">
+  <div class="sec-hd"><div class="sec-title">Scenario Matrix — pHEX × PLS</div><div class="sec-line"></div></div>
+  <div class="mat-note">Each cell shows the implied PLS price at that pHEX price × ratio combination. <span style="color:var(--grn)">Green</span> = above current PLS price. <span style="color:var(--red)">Red</span> = below. Current row highlighted.</div>
+  <table class="mat">
+    <thead id="matHead"></thead>
+    <tbody id="matBody"><tr><td colspan="6" style="color:var(--mu);padding:16px">Loading…</td></tr></tbody>
+  </table>
+</div>
+
+<!-- ── LP POOL ── -->
+<div class="lp-panel">
+  <div class="sec-hd"><div class="sec-title">pHEX / WPLS Pool · PulseX</div><div class="sec-line"></div></div>
+  <div class="lp-grid" id="lpGrid">
+    <div class="lp-card"><div class="lp-label">Pool liquidity</div><div class="lp-val sk" style="width:100px;height:20px"></div></div>
+    <div class="lp-card"><div class="lp-label">24h volume</div><div class="lp-val sk" style="width:100px;height:20px"></div></div>
+    <div class="lp-card"><div class="lp-label">24h fees earned</div><div class="lp-val sk" style="width:80px;height:20px"></div></div>
+    <div class="lp-card"><div class="lp-label">24h transactions</div><div class="lp-val sk" style="width:80px;height:20px"></div></div>
+  </div>
+</div>
+
+<div class="foot">
+  <div class="foot-note">
+    Data: <a href="https://dexscreener.com" target="_blank">DexScreener</a> · PulseX AMM pools · PulseChain mainnet<br>
+    Auto-refreshes every 60 seconds · PLS circulating supply ~500B (est.) · Not financial advice.
+  </div>
+</div>
+
+</main>
+
+<script>
+'use strict';
+
+/* ── CONSTANTS ── */
+const PHEX = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39';
+const WPLS  = '0xA1077a294dDE1B09bB078844df40758a5D0f9a27';
+const PLS_CIRC = 500_000_000_000;
+const HEX_SUPPLY = 596_500_000_000;
+const PULSEX_FEE = 0.0029; // 0.29%
+
+/* ── STATE ── */
+let S = { hexUsd:0, plsUsd:0, ratio:0, hexChg:{m5:0,h1:0,h6:0,h24:0}, plsChg:{m5:0,h1:0,h6:0,h24:0}, liq:0, vol24:0, txns24:0, loaded:false };
+let calcMode = 'A';
+
+/* ── HELPERS ── */
+const f2 = n => isNaN(n)||n===null?'—':(n>=0?'+':'')+n.toFixed(2)+'%';
+const fc = n => isNaN(n)||n===null?'fl':n>0.2?'up':n<-0.2?'dn':'fl';
+const fP = n => { if(!n||isNaN(n)) return '—'; if(n>=1) return '$'+n.toFixed(4); if(n>=0.01) return '$'+n.toFixed(5); if(n>=0.001) return '$'+n.toFixed(6); if(n>=0.0001) return '$'+n.toFixed(7); return '$'+n.toFixed(8); };
+const fB = n => { if(!n||isNaN(n)) return '—'; if(n>=1e12) return '$'+(n/1e12).toFixed(2)+'T'; if(n>=1e9) return '$'+(n/1e9).toFixed(2)+'B'; if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M'; if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K'; return '$'+n.toFixed(2); };
+const fR = n => { if(!n||isNaN(n)) return '—'; return n>=1000?n.toLocaleString(undefined,{maximumFractionDigits:0}):n.toFixed(2); };
+
+async function dsTokenBest(addr, chain){
+  const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/'+addr);
+  const d = await r.json();
+  return (d.pairs||[]).filter(p=>p.chainId===chain&&p.dexId==='pulsex').sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0]||null;
+}
+
+/* ── LOAD ── */
+async function loadAll(){
+  const btn=document.getElementById('rfBtn'); btn.classList.add('sp');
+  document.getElementById('updEl').textContent='Updating…';
+  try{
+    const [hexPair, plsPair] = await Promise.all([
+      dsTokenBest(PHEX,'pulsechain'),
+      dsTokenBest(WPLS,'pulsechain')
+    ]);
+
+    if(hexPair){
+      S.hexUsd = parseFloat(hexPair.priceUsd)||0;
+      S.hexChg = { m5:parseFloat(hexPair.priceChange?.m5||0), h1:parseFloat(hexPair.priceChange?.h1||0), h6:parseFloat(hexPair.priceChange?.h6||0), h24:parseFloat(hexPair.priceChange?.h24||0) };
+      S.liq    = hexPair.liquidity?.usd||0;
+      S.vol24  = hexPair.volume?.h24||0;
+      S.txns24 = (hexPair.txns?.h24?.buys||0)+(hexPair.txns?.h24?.sells||0);
+      // priceNative = pHEX priced in PLS (native token on PulseChain)
+      S.ratio  = parseFloat(hexPair.priceNative)||0;
+    }
+
+    if(plsPair){
+      S.plsUsd = parseFloat(plsPair.priceUsd)||0;
+      S.plsChg = { m5:parseFloat(plsPair.priceChange?.m5||0), h1:parseFloat(plsPair.priceChange?.h1||0), h6:parseFloat(plsPair.priceChange?.h6||0), h24:parseFloat(plsPair.priceChange?.h24||0) };
+    }
+
+    // Fallback: derive ratio from USD prices if priceNative not populated
+    if((!S.ratio||S.ratio===0) && S.hexUsd>0 && S.plsUsd>0){
+      S.ratio = S.hexUsd / S.plsUsd;
+    }
+
+    S.loaded = true;
+    renderAll();
+    document.getElementById('updEl').textContent = 'Updated '+new Date().toLocaleTimeString();
+  }catch(e){
+    document.getElementById('updEl').textContent = 'Error — retrying…';
+  }
+  btn.classList.remove('sp');
+}
+
+function renderAll(){
+  renderHero();
+  renderPrices();
+  renderValuation();
+  renderCalc();
+  renderMatrix();
+  renderLP();
+}
+
+/* ── HERO ── */
+function renderHero(){
+  document.getElementById('ratioNum').textContent = fR(S.ratio);
+
+  // Ratio change across timeframes: ratio_change = hex_change - pls_change (approximate log-diff)
+  const rc = {
+    m5:  S.hexChg.m5  - S.plsChg.m5,
+    h1:  S.hexChg.h1  - S.plsChg.h1,
+    h6:  S.hexChg.h6  - S.plsChg.h6,
+    h24: S.hexChg.h24 - S.plsChg.h24
+  };
+  document.getElementById('tfRow').innerHTML = ['m5','h1','h6','h24'].map((tf,i)=>
+    `<div class="tf-pill"><div class="tf-t">${['5m','1h','6h','24h'][i]}</div><div class="tf-v ${fc(rc[tf])}">${f2(rc[tf])}</div></div>`
+  ).join('');
+}
+
+/* ── PRICES ── */
+function renderPrices(){
+  document.getElementById('hexPriceEl').textContent = fP(S.hexUsd);
+  const hc=document.getElementById('hexChgEl');
+  hc.textContent=(S.hexChg.h24>=0?'▲ ':'▼ ')+Math.abs(S.hexChg.h24).toFixed(2)+'% 24h';
+  hc.className='pc-chg '+fc(S.hexChg.h24);
+  document.getElementById('hexStatsEl').innerHTML=
+    `<div class="pc-stat">Liq <b>${fB(S.liq)}</b></div><div class="pc-stat">Vol 24h <b>${fB(S.vol24)}</b></div>`;
+
+  document.getElementById('plsPriceEl').textContent = fP(S.plsUsd);
+  const pc=document.getElementById('plsChgEl');
+  pc.textContent=(S.plsChg.h24>=0?'▲ ':'▼ ')+Math.abs(S.plsChg.h24).toFixed(2)+'% 24h';
+  pc.className='pc-chg '+fc(S.plsChg.h24);
+  document.getElementById('plsStatsEl').innerHTML=
+    `<div class="pc-stat">Mcap est. <b>${fB(S.plsUsd*PLS_CIRC)}</b></div>`;
+}
+
+/* ── VALUATION ── */
+function renderValuation(){
+  const ratioDrift24 = S.hexChg.h24 - S.plsChg.h24; // positive = pHEX outperforming PLS → PLS getting cheaper vs pHEX
+
+  // Gauge: express PLS "expensiveness" relative to pHEX
+  // If pHEX 24h outperforms PLS (ratioDrift24 > 0) → PLS is cheap vs pHEX → gauge low
+  // If PLS outperforms pHEX (ratioDrift24 < 0) → PLS expensive → gauge high
+  const clampedDrift = Math.max(-20, Math.min(20, -ratioDrift24)); // invert: high = PLS expensive
+  const gaugePct = 50 + (clampedDrift/20)*45; // 5% to 95%
+
+  const fill = document.getElementById('gaugeFill');
+  fill.style.width = gaugePct.toFixed(0)+'%';
+  fill.style.background = gaugePct < 35 ? 'var(--grn)' : gaugePct > 65 ? 'var(--red)' : 'var(--amb)';
+
+  document.getElementById('gaugePointer').textContent =
+    'PLS relative to pHEX over last 24h: '+(ratioDrift24>0?'pHEX gaining on PLS (PLS cheaper)':ratioDrift24<0?'PLS gaining on pHEX (PLS more expensive)':'Moving together');
+
+  const vb = document.getElementById('verdictBox');
+  const vh = document.getElementById('verdictHead');
+  const vt = document.getElementById('verdictText');
+
+  if(ratioDrift24 > 3){
+    vb.className='verdict-box cheap'; vh.className='verdict-head';vh.style.color='var(--grn)';
+    vh.textContent='PLS looks cheap relative to pHEX right now';
+    vt.textContent='pHEX has outperformed PLS by '+ratioDrift24.toFixed(1)+'% over the last 24 hours, meaning you can buy more pHEX per PLS than yesterday. If you believe pHEX and PLS will revert toward their historical relationship, PLS may be lagging and catching up. Worth watching for a mean-reversion.';
+  } else if(ratioDrift24 < -3){
+    vb.className='verdict-box dear'; vh.className='verdict-head';vh.style.color='var(--red)';
+    vh.textContent='PLS looks expensive relative to pHEX right now';
+    vt.textContent='PLS has outperformed pHEX by '+Math.abs(ratioDrift24).toFixed(1)+'% over the last 24 hours, meaning you need more PLS to buy 1 pHEX than yesterday. If you believe in pHEX catching up, this could be a moment where pHEX represents better value on a relative basis.';
+  } else if(Math.abs(ratioDrift24) <= 1){
+    vb.className='verdict-box fair'; vh.className='verdict-head';vh.style.color='var(--tx)';
+    vh.textContent='PLS and pHEX are moving in sync — ratio stable';
+    vt.textContent='The pHEX/PLS ratio has barely shifted in the last 24 hours ('+f2(ratioDrift24)+' relative drift), meaning both assets are gaining or losing value together. No strong cheap/expensive signal on a relative basis right now.';
+  } else {
+    vb.className='verdict-box warn'; vh.className='verdict-head';vh.style.color='var(--amb)';
+    vh.textContent='Slight divergence — mild signal only';
+    vt.textContent='There is a small relative drift of '+f2(ratioDrift24)+' between pHEX and PLS over the last 24 hours. Not strong enough to call a clear cheap/expensive signal, but worth monitoring. A larger divergence would give a cleaner read.';
+  }
+
+  const hexMcap = S.hexUsd * HEX_SUPPLY;
+  const plsMcap = S.plsUsd * PLS_CIRC;
+  const relStr = S.hexChg.h24 - S.plsChg.h24;
+
+  document.getElementById('metricsRow').innerHTML = `
+    <div class="metric"><div class="m-label">Current ratio</div><div class="m-value">${fR(S.ratio)}</div><div class="m-sub">PLS per 1 pHEX</div></div>
+    <div class="metric"><div class="m-label">24h ratio drift</div><div class="m-value" style="color:${relStr>0?'var(--grn)':relStr<0?'var(--red)':'var(--mu2)'}">${f2(relStr)}</div><div class="m-sub">${relStr>0?'pHEX gaining':'PLS gaining'}</div></div>
+    <div class="metric"><div class="m-label">pHEX market cap</div><div class="m-value">${fB(hexMcap)}</div><div class="m-sub">596.5B supply est.</div></div>
+    <div class="metric"><div class="m-label">PLS market cap est.</div><div class="m-value">${fB(plsMcap)}</div><div class="m-sub">500B circ. est.</div></div>
+    <div class="metric"><div class="m-label">Relative strength 1h</div><div class="m-value" style="color:${(S.hexChg.h1-S.plsChg.h1)>0?'var(--grn)':'var(--red)'}">${f2(S.hexChg.h1-S.plsChg.h1)}</div><div class="m-sub">pHEX vs PLS</div></div>
+    <div class="metric"><div class="m-label">Vol/Liq ratio</div><div class="m-value">${S.liq>0?(S.vol24/S.liq*100).toFixed(1)+'%':'—'}</div><div class="m-sub">24h activity in pool</div></div>
+  `;
+}
+
+/* ── CALCULATOR ── */
+function setMode(m){
+  calcMode=m;
+  document.getElementById('modeBtnA').className='ct-btn'+(m==='A'?' active':'');
+  document.getElementById('modeBtnB').className='ct-btn'+(m==='B'?' active':'');
+  renderCalc();
+}
+
+function renderCalc(){
+  const cf = document.getElementById('calcFields');
+  const co = document.getElementById('calcOutputs');
+
+  if(calcMode==='A'){
+    cf.innerHTML=`
+      <div class="cf"><label>Target pHEX price (USD)</label><div class="cf-wrap"><span class="cf-pre">$</span><input class="ci" id="ci1" type="number" value="${(S.hexUsd*5).toFixed(6)||'0.0001'}" step="0.0001" oninput="calcOutput()"></div></div>
+      <div class="cf"><label>pHEX / PLS ratio assumption</label>
+        <select class="ci ci-plain" id="ci2" onchange="calcOutput()">
+          <option value="current">Current ratio (${fR(S.ratio)} PLS/pHEX)</option>
+          <option value="half">Half current ratio (PLS 2× stronger)</option>
+          <option value="double">Double current ratio (pHEX 2× stronger)</option>
+          <option value="custom">Custom (enter below)</option>
+        </select>
+      </div>
+      <div class="cf" id="ciCustomWrap" style="display:none"><label>Custom ratio (PLS per pHEX)</label><input class="ci ci-plain" id="ci3" type="number" value="${fR(S.ratio)}" step="100" oninput="calcOutput()"></div>
+      <div class="cf"><label>Your pHEX holdings</label><input class="ci ci-plain" id="ci4" type="number" value="0" step="1000" oninput="calcOutput()"></div>
+    `;
+    document.getElementById('ci2').addEventListener('change',function(){ document.getElementById('ciCustomWrap').style.display=this.value==='custom'?'flex':'none'; calcOutput(); });
+  } else {
+    cf.innerHTML=`
+      <div class="cf"><label>Target PLS price (USD)</label><div class="cf-wrap"><span class="cf-pre">$</span><input class="ci" id="ci1" type="number" value="${(S.plsUsd*5).toFixed(8)||'0.0001'}" step="0.00001" oninput="calcOutput()"></div></div>
+      <div class="cf"><label>pHEX / PLS ratio assumption</label>
+        <select class="ci ci-plain" id="ci2" onchange="calcOutput()">
+          <option value="current">Current ratio (${fR(S.ratio)} PLS/pHEX)</option>
+          <option value="half">Half current ratio</option>
+          <option value="double">Double current ratio</option>
+          <option value="custom">Custom (enter below)</option>
+        </select>
+      </div>
+      <div class="cf" id="ciCustomWrap" style="display:none"><label>Custom ratio (PLS per pHEX)</label><input class="ci ci-plain" id="ci3" type="number" value="${fR(S.ratio)}" step="100" oninput="calcOutput()"></div>
+      <div class="cf"><label>Your PLS holdings</label><input class="ci ci-plain" id="ci4" type="number" value="0" step="100000" oninput="calcOutput()"></div>
+    `;
+    document.getElementById('ci2').addEventListener('change',function(){ document.getElementById('ciCustomWrap').style.display=this.value==='custom'?'flex':'none'; calcOutput(); });
+  }
+  calcOutput();
+}
+
+function calcOutput(){
+  if(!S.loaded) return;
+  const co = document.getElementById('calcOutputs');
+  const t = parseFloat(document.getElementById('ci1')?.value)||0;
+  const rMode = document.getElementById('ci2')?.value||'current';
+  const myBag = parseFloat(document.getElementById('ci4')?.value)||0;
+
+  let r = S.ratio;
+  if(rMode==='half') r = S.ratio/2;
+  else if(rMode==='double') r = S.ratio*2;
+  else if(rMode==='custom') r = parseFloat(document.getElementById('ci3')?.value)||S.ratio;
+
+  if(calcMode==='A'){
+    // Target pHEX → implied PLS
+    const targetHex = t;
+    const impliedPls = r>0 ? targetHex/r : 0;
+    const hexMult = S.hexUsd>0 ? targetHex/S.hexUsd : 0;
+    const plsMult = S.plsUsd>0 ? impliedPls/S.plsUsd : 0;
+    const nowVal = myBag*S.hexUsd;
+    const tgtVal = myBag*targetHex;
+
+    co.innerHTML=`
+      <div class="out-card star"><div class="oc-label">Target pHEX</div><div class="oc-val">${fP(targetHex)}</div><div class="oc-chg ${hexMult>=1?'up':'dn'}">${hexMult>=1?'+':''}${((hexMult-1)*100).toFixed(0)}% · ${hexMult.toFixed(2)}×</div></div>
+      <div class="out-card star"><div class="oc-label">Implied PLS price</div><div class="oc-val">${fP(impliedPls)}</div><div class="oc-chg ${plsMult>=1?'up':'dn'}">${plsMult>=1?'+':''}${((plsMult-1)*100).toFixed(0)}% · ${plsMult.toFixed(2)}×</div><div class="oc-sub">at ratio ${fR(r)} PLS/pHEX</div></div>
+      <div class="out-card"><div class="oc-label">pHEX market cap</div><div class="oc-val">${fB(targetHex*HEX_SUPPLY)}</div><div class="oc-sub">at target price</div></div>
+      <div class="out-card"><div class="oc-label">PLS market cap est.</div><div class="oc-val">${fB(impliedPls*PLS_CIRC)}</div><div class="oc-sub">at implied price</div></div>
+      ${myBag>0?`
+      <div class="out-card"><div class="oc-label">Your pHEX now</div><div class="oc-val">${fB(nowVal)}</div><div class="oc-sub">${myBag.toLocaleString()} pHEX</div></div>
+      <div class="out-card star"><div class="oc-label">Your pHEX at target</div><div class="oc-val">${fB(tgtVal)}</div><div class="oc-chg ${tgtVal>=nowVal?'up':'dn'}">${tgtVal>=nowVal?'+':''}${fB(tgtVal-nowVal)}</div></div>
+      `:''}
+    `;
+  } else {
+    // Target PLS → implied pHEX
+    const targetPls = t;
+    const impliedHex = targetPls*r;
+    const plsMult = S.plsUsd>0 ? targetPls/S.plsUsd : 0;
+    const hexMult = S.hexUsd>0 ? impliedHex/S.hexUsd : 0;
+    const nowVal = myBag*S.plsUsd;
+    const tgtVal = myBag*targetPls;
+
+    co.innerHTML=`
+      <div class="out-card star"><div class="oc-label">Target PLS price</div><div class="oc-val">${fP(targetPls)}</div><div class="oc-chg ${plsMult>=1?'up':'dn'}">${plsMult>=1?'+':''}${((plsMult-1)*100).toFixed(0)}% · ${plsMult.toFixed(2)}×</div></div>
+      <div class="out-card star"><div class="oc-label">Implied pHEX price</div><div class="oc-val">${fP(impliedHex)}</div><div class="oc-chg ${hexMult>=1?'up':'dn'}">${hexMult>=1?'+':''}${((hexMult-1)*100).toFixed(0)}% · ${hexMult.toFixed(2)}×</div><div class="oc-sub">at ratio ${fR(r)} PLS/pHEX</div></div>
+      <div class="out-card"><div class="oc-label">pHEX market cap at target</div><div class="oc-val">${fB(impliedHex*HEX_SUPPLY)}</div></div>
+      <div class="out-card"><div class="oc-label">PLS market cap at target</div><div class="oc-val">${fB(targetPls*PLS_CIRC)}</div></div>
+      ${myBag>0?`
+      <div class="out-card"><div class="oc-label">Your PLS now</div><div class="oc-val">${fB(nowVal)}</div><div class="oc-sub">${myBag.toLocaleString()} PLS</div></div>
+      <div class="out-card star"><div class="oc-label">Your PLS at target</div><div class="oc-val">${fB(tgtVal)}</div><div class="oc-chg ${tgtVal>=nowVal?'up':'dn'}">${tgtVal>=nowVal?'+':''}${fB(tgtVal-nowVal)}</div></div>
+      `:''}
+    `;
+  }
+}
+
+/* ── MATRIX ── */
+function renderMatrix(){
+  if(!S.ratio||!S.plsUsd||!S.hexUsd) return;
+
+  const hexTargets = [S.hexUsd*0.5, S.hexUsd*0.75, S.hexUsd, S.hexUsd*2, S.hexUsd*5, S.hexUsd*10, S.hexUsd*50];
+  const ratioMults = [0.5, 0.75, 1, 1.5, 2];
+  const ratios = ratioMults.map(m=>S.ratio*m);
+
+  document.getElementById('matHead').innerHTML='<tr><th>pHEX price</th>'+
+    ratios.map((r,i)=>`<th>Ratio ${fR(r)}<br><span style="color:var(--mu);font-size:8px">${ratioMults[i]}× current</span></th>`).join('')+
+  '</tr>';
+
+  document.getElementById('matBody').innerHTML = hexTargets.map(hp=>{
+    const isCur = Math.abs(hp-S.hexUsd)<S.hexUsd*0.15;
+    return `<tr ${isCur?'class="cur"':''}>
+      <td>${fP(hp)}${isCur?'<span class="cur-row">NOW</span>':''}</td>
+      ${ratios.map(r=>{
+        const impliedPls = hp/r;
+        const cls = impliedPls>S.plsUsd*1.05?'cell-above':impliedPls<S.plsUsd*0.95?'cell-below':'cell-same';
+        const mult = S.plsUsd>0?impliedPls/S.plsUsd:0;
+        return `<td class="${cls}">${fP(impliedPls)}<br><span style="font-size:10px;color:var(--mu)">${mult>=1?'+':''}${((mult-1)*100).toFixed(0)}%</span></td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+}
+
+/* ── LP POOL ── */
+function renderLP(){
+  const fees24 = S.vol24 * PULSEX_FEE;
+  const volLiqRatio = S.liq>0 ? (S.vol24/S.liq)*100 : 0;
+
+  document.getElementById('lpGrid').innerHTML=`
+    <div class="lp-card"><div class="lp-label">Pool liquidity</div><div class="lp-val">${fB(S.liq)}</div><div class="lp-sub">pHEX + WPLS combined</div></div>
+    <div class="lp-card"><div class="lp-label">24h volume</div><div class="lp-val">${fB(S.vol24)}</div><div class="lp-sub">Total swap volume</div></div>
+    <div class="lp-card"><div class="lp-label">24h fees earned</div><div class="lp-val">${fB(fees24)}</div><div class="lp-sub">0.29% of volume to LPs</div>
+      <div class="vol-ratio"><div class="vol-fill" style="width:${Math.min(volLiqRatio,100).toFixed(0)}%"></div></div>
+      <div class="lp-sub" style="margin-top:4px">Vol/Liq: ${volLiqRatio.toFixed(1)}%</div>
+    </div>
+    <div class="lp-card"><div class="lp-label">24h transactions</div><div class="lp-val">${S.txns24.toLocaleString()}</div><div class="lp-sub">Buys + sells in pool</div></div>
+    <div class="lp-card"><div class="lp-label">Avg trade size</div><div class="lp-val">${S.txns24>0?fB(S.vol24/S.txns24):'—'}</div><div class="lp-sub">24h volume ÷ tx count</div></div>
+    <div class="lp-card"><div class="lp-label">Annualised fee yield</div><div class="lp-val">${S.liq>0?((fees24/S.liq)*365*100).toFixed(1)+'%':'—'}</div><div class="lp-sub">Est. LP return (variable)</div></div>
+  `;
+}
+
+/* ── BOOT ── */
+loadAll();
+setInterval(loadAll, 60000);
+</script>
+</body>
+</html>
