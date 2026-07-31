@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseX LP Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06070D; --s1:#0C0E18; --s2:#111525; --s3:#161B2E;
+  --hex:#FF2D78; --hex-b:rgba(255,45,120,.15); --hex-bb:rgba(255,45,120,.3);
+  --pls:#7B5CFF; --pls-b:rgba(123,92,255,.13); --pls-bb:rgba(123,92,255,.28);
+  --grn:#00D4A0; --grn-b:rgba(0,212,160,.12); --grn-bb:rgba(0,212,160,.3);
+  --red:#FF3366; --red-b:rgba(255,51,102,.12);
+  --amb:#FFB800; --amb-b:rgba(255,184,0,.12);
+  --tx:#DDE2F2; --mu:#404866; --mu2:#5A6285; --dim:#161B2E; --br:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 28px;border-bottom:1px solid var(--br);background:rgba(6,7,13,.95);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.brand .h{color:var(--hex)} .brand .d{color:var(--mu)} .brand .p{color:var(--pls)}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--grn-b);border:1px solid var(--grn-bb);color:var(--grn);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:bk 1.4s ease infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.rfbtn{background:var(--pls-b);border:1px solid var(--pls-bb);color:var(--pls);padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;display:flex;align-items:center;gap:5px}
+.rfbtn:hover{background:rgba(123,92,255,.25)}
+.rfbtn.sp .spin{animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.upd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mu2)}
+
+/* ── LAYOUT ── */
+main{max-width:1360px;margin:0 auto;padding:28px 24px 60px}
+
+/* ── LIVE PRICE BAR ── */
+.price-bar{background:var(--s1);border:1px solid var(--br);border-radius:14px;padding:16px 22px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.pb-item{}
+.pb-label{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--mu);text-transform:uppercase;margin-bottom:4px}
+.pb-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--tx)}
+.pb-chg{font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:3px}
+.pb-chg.up{color:var(--grn)} .pb-chg.dn{color:var(--red)} .pb-chg.fl{color:var(--mu2)}
+.use-live-btn{background:var(--pls-b);border:1px solid var(--pls-bb);color:var(--pls);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.15s;white-space:nowrap}
+.use-live-btn:hover{background:rgba(123,92,255,.25)}
+
+/* ── SECTION ── */
+.sec{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:24px;margin-bottom:20px}
+.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--br)}
+.sec-sub{font-size:12px;color:var(--mu2);margin-bottom:20px;line-height:1.6}
+
+/* ── INPUT GRID ── */
+.input-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.ifield{display:flex;flex-direction:column;gap:6px}
+.ifield label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.ifield .hint{font-size:10px;color:var(--mu);margin-top:-3px}
+.ifwrap{position:relative}
+.ifpre{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--mu2);pointer-events:none}
+.ifinput{width:100%;background:var(--s3);border:1px solid var(--br);border-radius:8px;padding:10px 12px 10px 28px;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--tx);outline:none;transition:border-color .15s}
+.ifinput:focus{border-color:var(--pls)}
+.ifinput.plain{padding-left:12px}
+.calc-btn{background:linear-gradient(135deg,var(--hex),var(--pls));color:#fff;border:none;padding:12px 28px;border-radius:9px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;margin-top:4px}
+.calc-btn:hover{filter:brightness(1.1)}
+
+/* ── SLIDER ── */
+.slider-wrap{margin:18px 0}
+.slider-label{display:flex;justify-content:space-between;font-size:11px;color:var(--mu2);margin-bottom:8px;font-family:'JetBrains Mono',monospace}
+input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:6px;background:var(--s3);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--pls);border:2px solid var(--bg);box-shadow:0 0 8px var(--pls);cursor:pointer}
+.range-ends{display:flex;justify-content:space-between;font-size:10px;color:var(--mu);font-family:'JetBrains Mono',monospace;margin-top:4px}
+
+/* ── OUTPUT CARDS ── */
+.out-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:18px}
+.ocard{background:var(--s2);border-radius:12px;padding:14px 16px;border:1px solid transparent;transition:border-color .2s}
+.ocard.star-hex{border-color:var(--hex-bb)}
+.ocard.star-pls{border-color:var(--pls-bb)}
+.ocard.star-grn{border-color:var(--grn-bb)}
+.ocard.warn{border-color:rgba(255,51,102,.3)}
+.oc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.oc-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--tx)}
+.oc-sub{font-size:10px;color:var(--mu2);margin-top:3px;line-height:1.5}
+.oc-chg{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-top:5px}
+.oc-chg.up{color:var(--grn)} .oc-chg.dn{color:var(--red)} .oc-chg.fl{color:var(--mu2)}
+
+/* ── IL BAR ── */
+.il-bar-wrap{margin-top:16px}
+.il-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--mu2);margin-bottom:6px}
+.il-track{height:8px;background:var(--s3);border-radius:8px;overflow:hidden}
+.il-fill{height:100%;border-radius:8px;transition:width .5s ease,background .5s}
+
+/* ── MILESTONE TABLE ── */
+table.mil{width:100%;border-collapse:collapse;font-size:12px;margin-top:16px}
+table.mil th{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--br);text-align:left}
+table.mil td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:12px}
+table.mil tr:last-child td{border-bottom:none}
+table.mil tr:hover td{background:var(--s2)}
+.mtag{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.5px}
+.mtag.grn{background:var(--grn-b);color:var(--grn)}
+.mtag.red{background:var(--red-b);color:var(--red)}
+.mtag.amb{background:var(--amb-b);color:var(--amb)}
+.mtag.pls{background:var(--pls-b);color:var(--pls)}
+
+/* ── BREAKEVEN ── */
+.be-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px}
+.be-card{background:var(--s2);border-radius:12px;padding:16px;border-left:3px solid var(--br)}
+.be-card.grn{border-left-color:var(--grn)}
+.be-card.amb{border-left-color:var(--amb)}
+.be-card.pls{border-left-color:var(--pls)}
+.be-card.red{border-left-color:var(--red)}
+.be-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:8px}
+.be-price{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--tx)}
+.be-sub{font-size:11px;color:var(--mu2);margin-top:5px;line-height:1.6}
+.be-chg{font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:5px}
+.be-chg.up{color:var(--grn)} .be-chg.dn{color:var(--red)}
+
+/* ── DISCLAIMER ── */
+.disclaimer{margin-top:32px;padding:16px 20px;background:var(--s1);border:1px solid var(--br);border-radius:12px;font-size:11px;color:var(--mu2);line-height:1.8}
+.disclaimer b{color:var(--tx)}
+
+/* ── SKELETON ── */
+.sk{background:var(--s3);border-radius:4px;animation:sh 1.6s infinite;display:inline-block}
+@keyframes sh{0%,100%{opacity:.4}50%{opacity:.7}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){main{padding:18px 14px 40px}.topbar{padding:12px 16px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="brand"><span class="h">pHEX</span><span class="d"> / </span><span class="p">PLS</span> LP Calculator</div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span class="upd" id="updEl">Connecting…</span>
+    <button class="rfbtn" id="rfBtn" onclick="loadLive()"><span class="spin">↻</span> Refresh</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ── LIVE PRICE BAR ── -->
+<div class="price-bar">
+  <div class="pb-item">
+    <div class="pb-label">pHEX price (live)</div>
+    <div class="pb-val" id="liveHex"><span class="sk" style="width:100px;height:22px"></span></div>
+    <div class="pb-chg fl" id="liveHexChg">—</div>
+  </div>
+  <div class="pb-item">
+    <div class="pb-label">PLS price (live)</div>
+    <div class="pb-val" id="livePls"><span class="sk" style="width:100px;height:22px"></span></div>
+    <div class="pb-chg fl" id="livePlsChg">—</div>
+  </div>
+  <div class="pb-item">
+    <div class="pb-label">Current ratio (PLS per pHEX)</div>
+    <div class="pb-val" id="liveRatio"><span class="sk" style="width:120px;height:22px"></span></div>
+    <div class="pb-chg fl" id="liveRatioChg">—</div>
+  </div>
+  <button class="use-live-btn" onclick="fillFromLive()">↓ Use live prices as entry point</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PANEL 1 — FORWARD SIMULATOR
+═══════════════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Panel 1 — Forward Simulator</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Enter your LP entry position and slide the price to see exactly how many tokens you hold, what they're worth, and how much impermanent loss has built up at any given pHEX price.</div>
+
+  <div class="input-grid">
+    <div class="ifield">
+      <label>pHEX at entry</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p1HexAmt" type="number" placeholder="e.g. 100000" oninput="runPanel1()"></div>
+    </div>
+    <div class="ifield">
+      <label>PLS at entry</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p1PlsAmt" type="number" placeholder="e.g. 5000000" oninput="runPanel1()"></div>
+    </div>
+    <div class="ifield">
+      <label>pHEX price at entry (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p1HexEntry" type="number" placeholder="0.000050" step="0.000001" oninput="runPanel1()"></div>
+    </div>
+    <div class="ifield">
+      <label>PLS price at entry (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p1PlsEntry" type="number" placeholder="0.000070" step="0.0000001" oninput="runPanel1()"></div>
+    </div>
+    <div class="ifield">
+      <label>Fees earned so far (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p1Fees" type="number" value="0" step="1" oninput="runPanel1()"></div>
+      <div class="hint">Optional — offsets impermanent loss</div>
+    </div>
+  </div>
+
+  <div class="slider-wrap">
+    <div class="slider-label">
+      <span>Current / target pHEX price</span>
+      <span id="sliderLabel" style="color:var(--hex);font-weight:700">$—</span>
+    </div>
+    <input type="range" id="p1Slider" min="1" max="1000" value="100" oninput="onSlider()">
+    <div class="range-ends"><span id="sliderMin">—</span><span>Current entry</span><span id="sliderMax">—</span></div>
+  </div>
+
+  <div class="out-grid" id="p1Output">
+    <div class="ocard"><div class="oc-label">Waiting for input</div><div class="oc-val" style="color:var(--mu)">Enter your LP position above</div></div>
+  </div>
+
+  <div class="il-bar-wrap" id="ilBarWrap" style="display:none">
+    <div class="il-bar-label">
+      <span>Impermanent loss (net of fees)</span>
+      <span id="ilPct" style="color:var(--red)">0%</span>
+    </div>
+    <div class="il-track"><div class="il-fill" id="ilFill" style="width:0%;background:var(--red)"></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PANEL 2 — REVERSE SOLVER
+═══════════════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Panel 2 — Reverse Solver</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Enter your original LP entry AND your current token amounts. The tool solves backwards to find the exact pHEX price milestones that restore specific conditions — same token count as entry, same USD value as holding, original ratio restored.</div>
+
+  <div class="input-grid">
+    <div class="ifield">
+      <label>Original pHEX deposited</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p2OgHex" type="number" placeholder="100000" oninput="runPanel2()"></div>
+    </div>
+    <div class="ifield">
+      <label>Original PLS deposited</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p2OgPls" type="number" placeholder="5000000" oninput="runPanel2()"></div>
+    </div>
+    <div class="ifield">
+      <label>Current pHEX in LP now</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p2CurHex" type="number" placeholder="80000" oninput="runPanel2()"></div>
+    </div>
+    <div class="ifield">
+      <label>Current PLS in LP now</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p2CurPls" type="number" placeholder="6250000" oninput="runPanel2()"></div>
+    </div>
+    <div class="ifield">
+      <label>pHEX entry price (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p2EntryPrice" type="number" placeholder="0.000050" step="0.000001" oninput="runPanel2()"></div>
+    </div>
+    <div class="ifield">
+      <label>PLS entry price (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p2PlsEntry" type="number" placeholder="0.000070" step="0.0000001" oninput="runPanel2()"></div>
+    </div>
+    <div class="ifield">
+      <label>Total fees earned (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p2Fees" type="number" value="0" step="1" oninput="runPanel2()"></div>
+    </div>
+  </div>
+
+  <div id="p2Output">
+    <div style="color:var(--mu);font-size:13px">Enter your original and current LP amounts above to see milestones.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PANEL 3 — BREAK-EVEN WITH FEES
+═══════════════════════════════════════════════ -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Panel 3 — True Break-Even Calculator</div><div class="sec-line"></div></div>
+  <div class="sec-sub">The true break-even isn't just about price — it's about what pHEX price, combined with all the fees you've earned, puts your total position exactly equal to what you would have had by simply holding both tokens without entering the LP. This is the real number that matters.</div>
+
+  <div class="input-grid">
+    <div class="ifield">
+      <label>pHEX amount deposited</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p3HexAmt" type="number" placeholder="100000" oninput="runPanel3()"></div>
+    </div>
+    <div class="ifield">
+      <label>PLS amount deposited</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p3PlsAmt" type="number" placeholder="5000000" oninput="runPanel3()"></div>
+    </div>
+    <div class="ifield">
+      <label>pHEX entry price (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p3HexEntry" type="number" placeholder="0.000050" step="0.000001" oninput="runPanel3()"></div>
+    </div>
+    <div class="ifield">
+      <label>PLS entry price (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p3PlsEntry" type="number" placeholder="0.000070" step="0.0000001" oninput="runPanel3()"></div>
+    </div>
+    <div class="ifield">
+      <label>Daily fee income (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="p3DailyFee" type="number" value="0" step="0.1" oninput="runPanel3()"></div>
+      <div class="hint">From LP pool data or manual entry</div>
+    </div>
+    <div class="ifield">
+      <label>Days in LP so far</label>
+      <div class="ifwrap"><input class="ifinput plain" id="p3Days" type="number" value="0" step="1" oninput="runPanel3()"></div>
+    </div>
+  </div>
+
+  <div id="p3Output">
+    <div style="color:var(--mu);font-size:13px">Enter your LP details above to see your true break-even analysis.</div>
+  </div>
+</div>
+
+<div class="disclaimer">
+  <b>How the math works:</b> This calculator uses the Uniswap V2 constant-product formula (x × y = k) which is the same AMM model PulseX uses. When pHEX price changes by a ratio r (new/old), your pHEX amount becomes original × (1/√r) and your PLS becomes original × √r. Impermanent loss % = (2√r/(1+r)) − 1. All calculations assume a 50/50 LP position by value at entry, which is how all standard AMM pools work. Fees earned are not compounded in these calculations. <b>IL only crystallises when you withdraw — while you remain in the LP these are unrealised movements, not actual losses.</b>
+</div>
+
+</main>
+
+<script>
+'use strict';
+
+const PHEX = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39';
+const WPLS  = '0xA1077a294dDE1B09bB078844df40758a5D0f9a27';
+
+let L = { hexUsd:0, plsUsd:0, ratio:0, hexChg24:0, plsChg24:0, loaded:false };
+
+/* ── HELPERS ── */
+const fP = n => { if(!n||isNaN(n)) return '—'; if(n>=1) return '$'+n.toFixed(4); if(n>=0.01) return '$'+n.toFixed(5); if(n>=0.001) return '$'+n.toFixed(6); if(n>=0.0001) return '$'+n.toFixed(7); return '$'+n.toFixed(8); };
+const fN = n => { if(!n||isNaN(n)) return '—'; if(n>=1e6) return n.toLocaleString(undefined,{maximumFractionDigits:0}); return n.toLocaleString(undefined,{maximumFractionDigits:2}); };
+const fB = n => { if(!n||isNaN(n)) return '—'; if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M'; if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K'; return '$'+n.toFixed(2); };
+const f2 = n => (n>=0?'+':'')+n.toFixed(2)+'%';
+const fc = n => n>0.2?'up':n<-0.2?'dn':'fl';
+const fR = n => { if(!n||isNaN(n)) return '—'; return n>=1000?n.toLocaleString(undefined,{maximumFractionDigits:0}):n.toFixed(2); };
+
+/* ── LIVE DATA ── */
+async function loadLive(){
+  const btn=document.getElementById('rfBtn'); btn.classList.add('sp');
+  document.getElementById('updEl').textContent='Updating…';
+  try{
+    const [hr, pr] = await Promise.all([
+      fetch('https://api.dexscreener.com/latest/dex/tokens/'+PHEX).then(r=>r.json()),
+      fetch('https://api.dexscreener.com/latest/dex/tokens/'+WPLS).then(r=>r.json())
+    ]);
+    const hp = (hr.pairs||[]).filter(p=>p.chainId==='pulsechain'&&p.dexId==='pulsex').sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+    const pp = (pr.pairs||[]).filter(p=>p.chainId==='pulsechain'&&p.dexId==='pulsex').sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+    if(hp){ L.hexUsd=parseFloat(hp.priceUsd)||0; L.hexChg24=parseFloat(hp.priceChange?.h24||0); L.ratio=parseFloat(hp.priceNative)||0; }
+    if(pp){ L.plsUsd=parseFloat(pp.priceUsd)||0; L.plsChg24=parseFloat(pp.priceChange?.h24||0); }
+    if((!L.ratio||L.ratio===0) && L.hexUsd>0 && L.plsUsd>0) L.ratio=L.hexUsd/L.plsUsd;
+    L.loaded=true;
+    renderBar();
+    document.getElementById('updEl').textContent='Updated '+new Date().toLocaleTimeString();
+  }catch(e){ document.getElementById('updEl').textContent='Error — retrying…'; }
+  btn.classList.remove('sp');
+}
+
+function renderBar(){
+  document.getElementById('liveHex').textContent=fP(L.hexUsd);
+  const hc=document.getElementById('liveHexChg'); hc.textContent=(L.hexChg24>=0?'▲ ':'▼ ')+Math.abs(L.hexChg24).toFixed(2)+'% 24h'; hc.className='pb-chg '+fc(L.hexChg24);
+  document.getElementById('livePls').textContent=fP(L.plsUsd);
+  const pc=document.getElementById('livePlsChg'); pc.textContent=(L.plsChg24>=0?'▲ ':'▼ ')+Math.abs(L.plsChg24).toFixed(2)+'% 24h'; pc.className='pb-chg '+fc(L.plsChg24);
+  document.getElementById('liveRatio').textContent=fR(L.ratio)+' PLS/pHEX';
+  const rDrift=L.hexChg24-L.plsChg24;
+  const rc=document.getElementById('liveRatioChg'); rc.textContent='Ratio drift 24h: '+f2(rDrift); rc.className='pb-chg '+fc(rDrift);
+}
+
+function fillFromLive(){
+  if(!L.loaded||!L.hexUsd||!L.plsUsd){ alert('Live prices still loading, wait a moment and try again.'); return; }
+  // Fill Panel 1
+  document.getElementById('p1HexEntry').value=L.hexUsd;
+  document.getElementById('p1PlsEntry').value=L.plsUsd;
+  // Fill Panel 2 entry prices
+  document.getElementById('p2EntryPrice').value=L.hexUsd;
+  document.getElementById('p2PlsEntry').value=L.plsUsd;
+  // Fill Panel 3
+  document.getElementById('p3HexEntry').value=L.hexUsd;
+  document.getElementById('p3PlsEntry').value=L.plsUsd;
+  runPanel1(); runPanel2(); runPanel3();
+}
+
+/* ══════════════════════════════════════════════
+   PANEL 1 — FORWARD SIMULATOR
+═══════════════════════════════════════════════ */
+function onSlider(){
+  const entryHex = parseFloat(document.getElementById('p1HexEntry').value)||L.hexUsd||0;
+  if(!entryHex) return;
+  const pct = parseInt(document.getElementById('p1Slider').value); // 1–1000 = 1% to 1000% of entry price
+  const targetHex = entryHex * pct / 100;
+  document.getElementById('sliderLabel').textContent = fP(targetHex)+' ('+pct+'% of entry)';
+  runPanel1(targetHex);
+}
+
+function runPanel1(overrideHexPrice){
+  const hexEntry  = parseFloat(document.getElementById('p1HexEntry').value)||0;
+  const plsEntry  = parseFloat(document.getElementById('p1PlsEntry').value)||0;
+  const hexAmt    = parseFloat(document.getElementById('p1HexAmt').value)||0;
+  const plsAmt    = parseFloat(document.getElementById('p1PlsAmt').value)||0;
+  const feesEarned= parseFloat(document.getElementById('p1Fees').value)||0;
+
+  if(!hexEntry||!plsEntry||!hexAmt||!plsAmt){
+    document.getElementById('p1Output').innerHTML='<div class="ocard"><div class="oc-label">Waiting for input</div><div class="oc-val" style="color:var(--mu)">Fill in all four fields above</div></div>';
+    document.getElementById('ilBarWrap').style.display='none';
+    return;
+  }
+
+  // Set up slider range
+  const slider = document.getElementById('p1Slider');
+  document.getElementById('sliderMin').textContent = fP(hexEntry*0.01);
+  document.getElementById('sliderMax').textContent = fP(hexEntry*10);
+
+  // Determine target price
+  const sliderPct = parseInt(slider.value);
+  const targetHexPrice = overrideHexPrice !== undefined ? overrideHexPrice : hexEntry * sliderPct / 100;
+  document.getElementById('sliderLabel').textContent = fP(targetHexPrice) + ' (' + Math.round(targetHexPrice/hexEntry*100) + '% of entry)';
+
+  // Entry ratio (PLS per pHEX)
+  const entryRatio = hexEntry / plsEntry; // pHEX price in PLS terms
+
+  // Price ratio r = new pHEX price / old pHEX price (both in USD, assuming PLS price held constant first pass)
+  // More accurate: use the ratio change in native terms
+  // For a pHEX/PLS pool: if pHEX goes from P0 to P1 in USD terms
+  // and PLS stays constant, r = P1/P0 straightforwardly
+  // But PLS might also move — we handle this by working in ratio space
+  // r = (new pHEX/PLS ratio) / (old pHEX/PLS ratio)
+  // Here we assume user is targeting pHEX USD price with PLS price unchanged (most common scenario)
+  const r = targetHexPrice / hexEntry; // price ratio of pHEX
+
+  // Constant product: initial k = hexAmt * plsAmt
+  const k = hexAmt * plsAmt;
+
+  // New amounts from constant product formula
+  // newHex * newPls = k
+  // newHex / newPls = 1 / entryRatio * r (new ratio)
+  // Solving: newHex = sqrt(k / r), newPls = sqrt(k * r) ... in ratio space
+  // More precisely for pHEX/PLS pool:
+  // if pHEX price multiplies by r relative to PLS:
+  // newHex = hexAmt / sqrt(r)
+  // newPls = plsAmt * sqrt(r)
+  const sqrtR = Math.sqrt(r);
+  const newHex = hexAmt / sqrtR;
+  const newPls = plsAmt * sqrtR;
+
+  // Assumes PLS price stays same for USD calculation (simple case)
+  const newHexUsd = newHex * targetHexPrice;
+  const newPlsUsd = newPls * plsEntry;
+  const lpValueUsd = newHexUsd + newPlsUsd + feesEarned;
+
+  // Hold value (what you'd have with no LP)
+  const holdHexUsd = hexAmt * targetHexPrice;
+  const holdPlsUsd = plsAmt * plsEntry;
+  const holdValueUsd = holdHexUsd + holdPlsUsd;
+
+  // Impermanent loss
+  const ilRaw = (2*sqrtR/(1+r)) - 1; // always negative or zero
+  const ilUsd = lpValueUsd - feesEarned - holdValueUsd;
+  const ilNetUsd = lpValueUsd - holdValueUsd; // net of fees
+
+  // Entry value
+  const entryValueUsd = hexAmt*hexEntry + plsAmt*plsEntry;
+
+  document.getElementById('p1Output').innerHTML = `
+    <div class="ocard star-hex">
+      <div class="oc-label">pHEX in LP at this price</div>
+      <div class="oc-val">${fN(newHex)}</div>
+      <div class="oc-sub">${fB(newHexUsd)} USD</div>
+      <div class="oc-chg ${newHex>=hexAmt?'up':'dn'}">${newHex>=hexAmt?'+':''}${((newHex/hexAmt-1)*100).toFixed(1)}% vs entry (${fN(hexAmt)})</div>
+    </div>
+    <div class="ocard star-pls">
+      <div class="oc-label">PLS in LP at this price</div>
+      <div class="oc-val">${fN(newPls)}</div>
+      <div class="oc-sub">${fB(newPlsUsd)} USD</div>
+      <div class="oc-chg ${newPls>=plsAmt?'up':'dn'}">${newPls>=plsAmt?'+':''}${((newPls/plsAmt-1)*100).toFixed(1)}% vs entry (${fN(plsAmt)})</div>
+    </div>
+    <div class="ocard star-grn">
+      <div class="oc-label">Total LP value (inc. fees)</div>
+      <div class="oc-val">${fB(lpValueUsd)}</div>
+      <div class="oc-sub">Entry was ${fB(entryValueUsd)}</div>
+      <div class="oc-chg ${lpValueUsd>=entryValueUsd?'up':'dn'}">${lpValueUsd>=entryValueUsd?'+':''}${fB(lpValueUsd-entryValueUsd)}</div>
+    </div>
+    <div class="ocard ${ilNetUsd<-1?'warn':''}">
+      <div class="oc-label">If you had just held</div>
+      <div class="oc-val">${fB(holdValueUsd)}</div>
+      <div class="oc-sub">Both tokens, no LP</div>
+    </div>
+    <div class="ocard ${ilNetUsd<0?'warn':'star-grn'}">
+      <div class="oc-label">LP vs Holding (net fees)</div>
+      <div class="oc-val" style="color:${ilNetUsd>=0?'var(--grn)':'var(--red)'}">${fB(Math.abs(ilNetUsd))}</div>
+      <div class="oc-sub">${ilNetUsd>=0?'LP outperforming holding by':'LP underperforming holding by'}</div>
+      <div class="oc-chg ${ilNetUsd>=0?'up':'dn'}">${(ilRaw*100).toFixed(2)}% raw IL · ${fB(feesEarned)} fees earned</div>
+    </div>
+    <div class="ocard">
+      <div class="oc-label">Price ratio r</div>
+      <div class="oc-val">${r.toFixed(4)}×</div>
+      <div class="oc-sub">${r>1?'pHEX up '+((r-1)*100).toFixed(1)+'% vs entry':'pHEX down '+((1-r)*100).toFixed(1)+'% vs entry'}</div>
+    </div>
+  `;
+
+  const ilPct = Math.abs(ilRaw)*100;
+  const ilBarEl = document.getElementById('ilBarWrap');
+  ilBarEl.style.display='block';
+  document.getElementById('ilPct').textContent = (ilRaw*100).toFixed(3)+'% raw IL';
+  document.getElementById('ilFill').style.width = Math.min(ilPct*5, 100)+'%'; // scale so 20% IL = full bar
+  document.getElementById('ilFill').style.background = ilPct<2?'var(--grn)':ilPct<5?'var(--amb)':'var(--red)';
+}
+
+/* ══════════════════════════════════════════════
+   PANEL 2 — REVERSE SOLVER
+═══════════════════════════════════════════════ */
+function runPanel2(){
+  const ogHex   = parseFloat(document.getElementById('p2OgHex').value)||0;
+  const ogPls   = parseFloat(document.getElementById('p2OgPls').value)||0;
+  const curHex  = parseFloat(document.getElementById('p2CurHex').value)||0;
+  const curPls  = parseFloat(document.getElementById('p2CurPls').value)||0;
+  const entryP  = parseFloat(document.getElementById('p2EntryPrice').value)||0;
+  const plsEntP = parseFloat(document.getElementById('p2PlsEntry').value)||0;
+  const fees    = parseFloat(document.getElementById('p2Fees').value)||0;
+
+  if(!ogHex||!ogPls||!curHex||!curPls||!entryP||!plsEntP){
+    document.getElementById('p2Output').innerHTML='<div style="color:var(--mu);font-size:13px">Fill in all fields above to see milestones.</div>';
+    return;
+  }
+
+  const k = ogHex * ogPls; // constant product from entry
+  const entryRatio = ogHex / ogPls; // pHEX per PLS at entry (inverted from usual)
+
+  // Current r from current amounts: curHex = ogHex/sqrt(r) → r = (ogHex/curHex)²
+  const currentR = Math.pow(ogHex/curHex, 2);
+  const currentHexPrice = entryP * currentR;
+  const currentPlsPrice = plsEntP; // assume PLS flat for simplicity
+
+  // Entry USD value
+  const entryUsd = ogHex*entryP + ogPls*plsEntP;
+  const holdUsdNow = ogHex*currentHexPrice + ogPls*currentPlsPrice;
+  const lpUsdNow = curHex*currentHexPrice + curPls*currentPlsPrice + fees;
+
+  // MILESTONE 1: Price that restores same pHEX count as entry
+  // curHex = ogHex/sqrt(r) = ogHex → r = 1 → hexPrice = entryP
+  const priceRestoreHex = entryP;
+
+  // MILESTONE 2: Price that restores same PLS count as entry
+  // curPls = ogPls*sqrt(r) = ogPls → r = 1 → same as above
+  const priceRestorePls = entryP;
+
+  // MILESTONE 3: Price where LP value = Hold value (IL break-even, no fees)
+  // LP value at price P (assuming PLS constant):
+  // lpVal = 2 * sqrt(P/entryP) * entryUsd/2 ... simplifies to entryUsd * sqrt(r)... wait
+  // More precisely:
+  // newHex = ogHex/sqrt(r), newPls = ogPls*sqrt(r), r = P/entryP
+  // lpVal = (ogHex/sqrt(r))*P + ogPls*sqrt(r)*plsEntP
+  //       = ogHex*P/sqrt(P/entryP) + ogPls*sqrt(P/entryP)*plsEntP
+  //       = ogHex*sqrt(P*entryP) + ogPls*sqrt(P/entryP)*plsEntP
+  // holdVal = ogHex*P + ogPls*plsEntP
+  // Set equal and solve numerically
+  const priceILBreakeven = findILBreakeven(ogHex, ogPls, entryP, plsEntP, 0);
+  const priceILBreakevenFees = findILBreakeven(ogHex, ogPls, entryP, plsEntP, fees);
+
+  // MILESTONE 4: Price that restores original ratio (pHEX/PLS = entry ratio)
+  // Current ratio: curHex/curPls
+  // For pool: ratio changes as r changes: newHex/newPls = (ogHex/sqrt(r)) / (ogPls*sqrt(r)) = entryRatio/r
+  // To restore entry ratio: entryRatio/r = entryRatio → r = 1 → price = entryP
+  // The ratio only restores when price returns to entry price — this is a key insight
+  const priceRestoreRatio = entryP;
+
+  // MILESTONE 5: Price where LP value = original entry USD value
+  // lpVal = ogHex*sqrt(P*entryP) + ogPls*sqrt(P/entryP)*plsEntP = entryUsd
+  const priceRestoreEntryValue = findPriceForTargetLPValue(ogHex, ogPls, entryP, plsEntP, entryUsd, fees);
+
+  function chg(p){ return p>0&&entryP>0?f2((p/entryP-1)*100):'—'; }
+  function cls(p){ return p>entryP?'grn':p<entryP?'red':'amb'; }
+
+  document.getElementById('p2Output').innerHTML = `
+    <div style="margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px">
+        <div class="ocard">
+          <div class="oc-label">Estimated current pHEX price</div>
+          <div class="oc-val">${fP(currentHexPrice)}</div>
+          <div class="oc-sub">Inferred from your current token amounts</div>
+        </div>
+        <div class="ocard">
+          <div class="oc-label">LP value now (inc. fees)</div>
+          <div class="oc-val">${fB(lpUsdNow)}</div>
+          <div class="oc-sub">vs entry ${fB(entryUsd)}</div>
+        </div>
+        <div class="ocard">
+          <div class="oc-label">Hold value now</div>
+          <div class="oc-val">${fB(holdUsdNow)}</div>
+          <div class="oc-sub">vs LP: ${fB(lpUsdNow-holdUsdNow)} ${lpUsdNow>=holdUsdNow?'ahead':'behind'}</div>
+        </div>
+        <div class="ocard">
+          <div class="oc-label">Current r (price ratio)</div>
+          <div class="oc-val">${currentR.toFixed(4)}×</div>
+          <div class="oc-sub">vs entry price</div>
+        </div>
+      </div>
+    </div>
+
+    <table class="mil">
+      <thead><tr>
+        <th>Milestone</th>
+        <th>pHEX price needed</th>
+        <th>Change from entry</th>
+        <th>What it means</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>Restore original ratio (pHEX/PLS)</td>
+          <td style="color:var(--hex)">${fP(priceRestoreRatio)}</td>
+          <td><span class="mtag amb">Entry price</span></td>
+          <td style="color:var(--mu2)">The ratio only fully restores when pHEX returns exactly to entry price — this is a mathematical certainty of how AMM pools work</td>
+        </tr>
+        <tr>
+          <td>Restore same pHEX count as entry</td>
+          <td style="color:var(--hex)">${fP(priceRestoreHex)}</td>
+          <td><span class="mtag amb">Entry price</span></td>
+          <td style="color:var(--mu2)">Your pHEX count returns to ${fN(ogHex)} when price returns to entry — same mathematical result</td>
+        </tr>
+        <tr>
+          <td>Restore same PLS count as entry</td>
+          <td style="color:var(--hex)">${fP(priceRestorePls)}</td>
+          <td><span class="mtag amb">Entry price</span></td>
+          <td style="color:var(--mu2)">Both token counts restore simultaneously at entry price — AMM pools are symmetric</td>
+        </tr>
+        <tr>
+          <td>IL break-even (no fees)</td>
+          <td style="color:var(--hex)">${priceILBreakeven>0?fP(priceILBreakeven):'N/A'}</td>
+          <td><span class="mtag ${cls(priceILBreakeven)}">${chg(priceILBreakeven)}</span></td>
+          <td style="color:var(--mu2)">Price where LP value equals what holding would have been worth — without counting fees</td>
+        </tr>
+        <tr>
+          <td>IL break-even (with ${fB(fees)} fees)</td>
+          <td style="color:var(--hex)">${priceILBreakevenFees>0?fP(priceILBreakevenFees):'Fees already cover IL'}</td>
+          <td><span class="mtag ${cls(priceILBreakevenFees)}">${priceILBreakevenFees>0?chg(priceILBreakevenFees):'✓ Covered'}</span></td>
+          <td style="color:var(--mu2)">True break-even including fees earned — this is the number that actually matters</td>
+        </tr>
+        <tr>
+          <td>Restore original entry USD value</td>
+          <td style="color:var(--hex)">${priceRestoreEntryValue>0?fP(priceRestoreEntryValue):'Already above entry value'}</td>
+          <td><span class="mtag ${priceRestoreEntryValue>0?cls(priceRestoreEntryValue):'grn'}">${priceRestoreEntryValue>0?chg(priceRestoreEntryValue):'✓ Already there'}</span></td>
+          <td style="color:var(--mu2)">Price where your total LP value (inc. fees) equals your original deposit in USD terms</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:14px;padding:12px 16px;background:var(--s2);border-radius:10px;font-size:12px;color:var(--mu2);line-height:1.7">
+      <b style="color:var(--tx)">Key insight:</b> The three token-count and ratio milestones all land at exactly the entry price — this is not a coincidence. It's a mathematical property of constant-product AMMs. The only thing that can restore your original token counts without returning to entry price is exiting the LP and rebalancing manually. What <em>can</em> improve without price returning to entry is your overall USD value, via fee income accumulating over time.
+    </div>
+  `;
+}
+
+/* ── Numerical solver: find pHEX price where LP value = hold value ── */
+function findILBreakeven(ogHex, ogPls, entryP, plsP, fees){
+  // At price P: lpVal = ogHex*sqrt(P*entryP) + ogPls*(P/entryP)^0.5 * plsP ... need to use correct formula
+  // newHex = ogHex/sqrt(r), newPls = ogPls*sqrt(r), r = P/entryP
+  // lpVal = newHex*P + newPls*plsP + fees
+  //       = (ogHex/sqrt(r))*P + ogPls*sqrt(r)*plsP + fees
+  // holdVal = ogHex*P + ogPls*plsP
+  // Solve lpVal = holdVal numerically
+  const holdBase = ogPls*plsP; // constant part of hold
+  for(let P=entryP*0.001; P<=entryP*100; P+=entryP*0.01){
+    const r = P/entryP;
+    const sqR = Math.sqrt(r);
+    const lp = (ogHex/sqR)*P + ogPls*sqR*plsP + fees;
+    const hold = ogHex*P + holdBase;
+    if(Math.abs(lp-hold)<hold*0.001) return P;
+  }
+  return 0;
+}
+
+function findPriceForTargetLPValue(ogHex, ogPls, entryP, plsP, target, fees){
+  const holdBase = ogPls*plsP;
+  for(let P=entryP*0.001; P<=entryP*100; P+=entryP*0.01){
+    const r = P/entryP;
+    const sqR = Math.sqrt(r);
+    const lp = (ogHex/sqR)*P + ogPls*sqR*plsP + fees;
+    if(Math.abs(lp-target)<target*0.005) return P;
+    if(lp>target && P>entryP) return P; // overshot upward
+  }
+  return 0;
+}
+
+/* ══════════════════════════════════════════════
+   PANEL 3 — TRUE BREAK-EVEN WITH FEES
+═══════════════════════════════════════════════ */
+function runPanel3(){
+  const hexAmt    = parseFloat(document.getElementById('p3HexAmt').value)||0;
+  const plsAmt    = parseFloat(document.getElementById('p3PlsAmt').value)||0;
+  const hexEntry  = parseFloat(document.getElementById('p3HexEntry').value)||0;
+  const plsEntry  = parseFloat(document.getElementById('p3PlsEntry').value)||0;
+  const dailyFee  = parseFloat(document.getElementById('p3DailyFee').value)||0;
+  const days      = parseFloat(document.getElementById('p3Days').value)||0;
+
+  if(!hexAmt||!plsAmt||!hexEntry||!plsEntry){
+    document.getElementById('p3Output').innerHTML='<div style="color:var(--mu);font-size:13px">Enter your LP details above.</div>';
+    return;
+  }
+
+  const entryUsd = hexAmt*hexEntry + plsAmt*plsEntry;
+  const totalFees = dailyFee*days;
+  const dailyILCover = dailyFee; // how much IL is offset per day
+
+  // IL at various price multipliers
+  const scenarios = [
+    { label:'Price −75%',   mult:0.25 },
+    { label:'Price −50%',   mult:0.50 },
+    { label:'Price −25%',   mult:0.75 },
+    { label:'Price at entry', mult:1.00 },
+    { label:'Price +50%',   mult:1.50 },
+    { label:'Price 2×',     mult:2.00 },
+    { label:'Price 5×',     mult:5.00 },
+    { label:'Price 10×',    mult:10.0 },
+  ];
+
+  const rows = scenarios.map(sc=>{
+    const r = sc.mult;
+    const sqR = Math.sqrt(r);
+    const newHexP = hexEntry * r;
+    const newHex = hexAmt / sqR;
+    const newPls = plsAmt * sqR;
+    const lpVal = newHex*newHexP + newPls*plsEntry;
+    const holdVal = hexAmt*newHexP + plsAmt*plsEntry;
+    const ilUsd = lpVal - holdVal;
+    const ilPct = (2*sqR/(1+r)-1)*100;
+    const lpPlusFees = lpVal + totalFees;
+    const netVsHold = lpPlusFees - holdVal;
+
+    // Days of fees needed to cover IL at this price
+    const ilDollar = Math.abs(ilUsd);
+    const daysToCover = dailyFee>0 ? ilDollar/dailyFee : null;
+
+    return { sc, r, lpVal, holdVal, ilPct, lpPlusFees, netVsHold, daysToCover, ilUsd };
+  });
+
+  // True break-even price (IL = fees)
+  const trueBEPrice = findILBreakeven(hexAmt, plsAmt, hexEntry, plsEntry, totalFees);
+  const bePriceNoFees = findILBreakeven(hexAmt, plsAmt, hexEntry, plsEntry, 0);
+
+  // Days until fees cover worst-case IL (at 2x price which is max IL point)
+  const r2 = 2;
+  const sqR2 = Math.sqrt(r2);
+  const lpVal2 = (hexAmt/sqR2)*hexEntry*r2 + plsAmt*sqR2*plsEntry;
+  const hold2 = hexAmt*hexEntry*r2 + plsAmt*plsEntry;
+  const maxIL = Math.abs(lpVal2 - hold2);
+  const daysToMaxILCover = dailyFee>0 ? Math.ceil(maxIL/dailyFee) : null;
+
+  document.getElementById('p3Output').innerHTML = `
+    <div class="be-grid">
+      <div class="be-card grn">
+        <div class="be-label">Total fees earned</div>
+        <div class="be-price">${fB(totalFees)}</div>
+        <div class="be-sub">${fB(dailyFee)}/day × ${days} days</div>
+      </div>
+      <div class="be-card ${trueBEPrice>0?'amb':'grn'}">
+        <div class="be-label">True break-even price (with fees)</div>
+        <div class="be-price">${trueBEPrice>0?fP(trueBEPrice):'Already at break-even'}</div>
+        <div class="be-sub">pHEX needs to reach this for LP = holding, after counting all fees earned</div>
+        ${trueBEPrice>0&&hexEntry>0?`<div class="be-chg ${trueBEPrice>hexEntry?'dn':'up'}">${f2((trueBEPrice/hexEntry-1)*100)} from entry</div>`:''}
+      </div>
+      <div class="be-card red">
+        <div class="be-label">Break-even without fees</div>
+        <div class="be-price">${bePriceNoFees>0?fP(bePriceNoFees):'N/A'}</div>
+        <div class="be-sub">Where LP = holding if you earned zero fees — shows how much fees matter</div>
+        ${bePriceNoFees>0&&hexEntry>0?`<div class="be-chg dn">${f2((bePriceNoFees/hexEntry-1)*100)} from entry</div>`:''}
+      </div>
+      <div class="be-card pls">
+        <div class="be-label">${dailyFee>0?'Days to cover max IL at 2× price':'Max IL at 2× price'}</div>
+        <div class="be-price">${dailyFee>0?(daysToMaxILCover!==null?daysToMaxILCover+' days':'∞'):fB(maxIL)}</div>
+        <div class="be-sub">${dailyFee>0?'If pHEX doubles, this many days of fees covers the IL':'Enter daily fee income to see days needed'}</div>
+      </div>
+    </div>
+
+    <table class="mil" style="margin-top:20px">
+      <thead><tr>
+        <th>Scenario</th>
+        <th>LP value</th>
+        <th>Hold value</th>
+        <th>Raw IL%</th>
+        <th>LP + fees</th>
+        <th>Net vs holding</th>
+        ${dailyFee>0?'<th>Days fees cover IL</th>':''}
+      </tr></thead>
+      <tbody>
+        ${rows.map(row=>`<tr ${row.r===1?'style="background:var(--s2)"':''}>
+          <td style="color:${row.r>1?'var(--grn)':row.r<1?'var(--red)':'var(--amb)'}">${row.sc.label}</td>
+          <td>${fB(row.lpVal)}</td>
+          <td>${fB(row.holdVal)}</td>
+          <td style="color:var(--red)">${row.ilPct.toFixed(2)}%</td>
+          <td style="color:var(--grn)">${fB(row.lpPlusFees)}</td>
+          <td class="${row.netVsHold>=0?'oc-chg up':'oc-chg dn'}">${fB(Math.abs(row.netVsHold))} ${row.netVsHold>=0?'ahead':'behind'}</td>
+          ${dailyFee>0?`<td style="color:var(--mu2)">${row.daysToCover!==null?Math.ceil(row.daysToCover)+' days':'—'}</td>`:''}
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+/* ── BOOT ── */
+loadLive();
+setInterval(loadLive, 60000);
+</script>
+</body>
+</html>
