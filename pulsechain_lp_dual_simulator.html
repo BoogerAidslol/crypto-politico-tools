@@ -1,0 +1,472 @@
+
+<style>
+:root{
+  --bg:#06070D;--s1:#0C0E18;--s2:#111525;--s3:#161B2E;
+  --hex:#FF2D78;--hex-b:rgba(255,45,120,.15);--hex-bb:rgba(255,45,120,.3);
+  --pls:#7B5CFF;--pls-b:rgba(123,92,255,.13);--pls-bb:rgba(123,92,255,.28);
+  --grn:#00D4A0;--grn-b:rgba(0,212,160,.12);--grn-bb:rgba(0,212,160,.3);
+  --red:#FF3366;--red-b:rgba(255,51,102,.12);
+  --amb:#FFB800;--amb-b:rgba(255,184,0,.12);
+  --tx:#DDE2F2;--mu:#404866;--mu2:#5A6285;--dim:#161B2E;--br:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;padding:16px}
+.toprow{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.brand .h{color:var(--hex)}.brand .d{color:var(--mu)}.brand .p{color:var(--pls)}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--grn-b);border:1px solid var(--grn-bb);color:var(--grn);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:bk 1.4s ease infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.price-bar{background:var(--s1);border:1px solid var(--br);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.pb-item .pb-label{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--mu);text-transform:uppercase;margin-bottom:3px}
+.pb-item .pb-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700}
+.pb-item .pb-chg{font-size:10px;font-family:'JetBrains Mono',monospace;margin-top:2px}
+.pb-chg.up{color:var(--grn)}.pb-chg.dn{color:var(--red)}.pb-chg.fl{color:var(--mu2)}
+.use-btn{background:var(--pls-b);border:1px solid var(--pls-bb);color:var(--pls);padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sec{background:var(--s1);border:1px solid var(--br);border-radius:14px;padding:18px;margin-bottom:14px}
+.sec-hd{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--mu2);text-transform:uppercase;margin-bottom:6px}
+.sec-sub{font-size:11px;color:var(--mu2);margin-bottom:14px;line-height:1.6}
+.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:14px}
+.ifield label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;display:block;margin-bottom:5px}
+.ifield .hint{font-size:10px;color:var(--mu);margin-top:3px}
+.ifield input{width:100%;background:var(--s3);border:1px solid var(--br);border-radius:7px;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--tx);outline:none;transition:border-color .15s}
+.ifield input:focus{border-color:var(--pls)}
+
+/* ── DUAL SLIDERS ── */
+.sliders-wrap{background:var(--s2);border-radius:12px;padding:16px;margin-bottom:14px}
+.slider-row{margin-bottom:14px}
+.slider-row:last-child{margin-bottom:0}
+.sl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sl-label{font-size:11px;font-weight:700;letter-spacing:.5px}
+.sl-label.hex{color:var(--hex)}.sl-label.pls{color:var(--pls)}
+.sl-vals{display:flex;align-items:center;gap:10px}
+.sl-price{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--tx)}
+.sl-mult{font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:5px}
+.sl-mult.up{background:var(--grn-b);color:var(--grn)}.sl-mult.dn{background:var(--red-b);color:var(--red)}.sl-mult.flat{background:var(--s3);color:var(--mu2)}
+input[type=range]{width:100%;height:6px;border-radius:6px;outline:none;-webkit-appearance:none;cursor:pointer}
+input[type=range].hex-range{background:linear-gradient(to right,var(--hex-b),var(--hex))}
+input[type=range].pls-range{background:linear-gradient(to right,var(--pls-b),var(--pls))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;border:2px solid var(--bg);cursor:pointer}
+input[type=range].hex-range::-webkit-slider-thumb{background:var(--hex);box-shadow:0 0 6px var(--hex)}
+input[type=range].pls-range::-webkit-slider-thumb{background:var(--pls);box-shadow:0 0 6px var(--pls)}
+.sl-ends{display:flex;justify-content:space-between;font-size:9px;color:var(--mu);font-family:'JetBrains Mono',monospace;margin-top:3px}
+
+/* ── RATIO INSIGHT ── */
+.ratio-insight{background:var(--s3);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.ri-item{text-align:center}
+.ri-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:4px}
+.ri-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700}
+.ri-sub{font-size:10px;color:var(--mu2);margin-top:2px}
+.ri-verdict{padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;line-height:1.5;max-width:320px}
+.ri-verdict.great{background:var(--grn-b);color:var(--grn)}.ri-verdict.good{background:var(--pls-b);color:var(--pls)}.ri-verdict.warn{background:var(--amb-b);color:var(--amb)}.ri-verdict.bad{background:var(--red-b);color:var(--red)}
+
+/* ── RESULTS ── */
+.results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.rc{background:var(--s2);border-radius:10px;padding:12px;border:1px solid transparent;transition:border-color .2s}
+.rc.hex-card{border-color:var(--hex-bb)}.rc.pls-card{border-color:var(--pls-bb)}.rc.grn-card{border-color:var(--grn-bb)}.rc.warn-card{border-color:rgba(255,51,102,.3)}
+.rc-label{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mu);text-transform:uppercase;margin-bottom:5px}
+.rc-val{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:var(--tx)}
+.rc-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+.rc-chg{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-top:4px}
+.rc-chg.up{color:var(--grn)}.rc-chg.dn{color:var(--red)}.rc-chg.fl{color:var(--mu2)}
+
+/* ── IL BAR ── */
+.il-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.il-label{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--mu2);white-space:nowrap;width:120px}
+.il-track{flex:1;height:6px;background:var(--s3);border-radius:6px;overflow:hidden}
+.il-fill{height:100%;border-radius:6px;transition:width .5s,background .5s}
+.il-pct{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;width:60px;text-align:right}
+
+/* ── SCENARIO TABLE ── */
+.tabs{display:flex;background:var(--s3);border-radius:10px;padding:3px;margin-bottom:14px;gap:2px}
+.tab{flex:1;padding:7px;border-radius:8px;border:none;background:none;color:var(--mu2);font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:.15s;text-align:center}
+.tab.active{background:var(--pls);color:#fff}
+.tpanel{display:none}.tpanel.active{display:block}
+.sc-note{font-size:11px;color:var(--mu2);margin-bottom:10px;line-height:1.6}
+table.sc{width:100%;border-collapse:collapse;font-size:11px}
+table.sc th{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--mu);text-transform:uppercase;padding:7px 8px;border-bottom:1px solid var(--br);text-align:center;white-space:nowrap}
+table.sc th:first-child{text-align:left}
+table.sc td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center}
+table.sc td:first-child{text-align:left}
+table.sc tr.cur-row td{background:var(--s2);font-weight:700}
+table.sc tr:hover td{background:var(--s2)}
+.cell-grn{color:var(--grn)}.cell-red{color:var(--red)}.cell-amb{color:var(--amb)}.cell-mu{color:var(--mu2)}
+.sk{background:var(--s3);border-radius:4px;animation:sh 1.6s infinite;display:inline-block}
+@keyframes sh{0%,100%{opacity:.4}50%{opacity:.7}}
+.insight-box{background:var(--s3);border-left:3px solid var(--pls);border-radius:0 8px 8px 0;padding:12px 14px;font-size:11px;color:var(--mu2);line-height:1.7;margin-top:14px}
+.insight-box b{color:var(--tx)}
+</style>
+
+<div class="wrap">
+
+<div class="toprow">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="brand"><span class="h">pHEX</span><span class="d"> / </span><span class="p">PLS</span> LP Simulator</div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mu2)" id="updEl">Loading…</span>
+</div>
+
+<!-- LIVE PRICES -->
+<div class="price-bar">
+  <div class="pb-item"><div class="pb-label">pHEX (live)</div><div class="pb-val" id="lHex"><span class="sk" style="width:70px;height:16px"></span></div><div class="pb-chg fl" id="lHexC">—</div></div>
+  <div class="pb-item"><div class="pb-label">PLS (live)</div><div class="pb-val" id="lPls"><span class="sk" style="width:70px;height:16px"></span></div><div class="pb-chg fl" id="lPlsC">—</div></div>
+  <div class="pb-item"><div class="pb-label">Ratio (PLS/pHEX)</div><div class="pb-val" id="lRatio"><span class="sk" style="width:90px;height:16px"></span></div></div>
+  <button class="use-btn" onclick="fillFromLive()">↓ Use live prices as entry</button>
+</div>
+
+<!-- ENTRY POSITION -->
+<div class="sec">
+  <div class="sec-hd">Your LP Entry Position</div>
+  <div class="sec-sub">Enter what you deposited and at what prices. Then use the two sliders below to set any combination of pHEX and PLS target prices — the simulator updates instantly.</div>
+  <div class="entry-grid">
+    <div class="ifield"><label>pHEX amount deposited</label><input id="eHA" type="number" placeholder="100,000" oninput="sim()"></div>
+    <div class="ifield"><label>PLS amount deposited</label><input id="ePA" type="number" placeholder="5,000,000" oninput="sim()"></div>
+    <div class="ifield"><label>pHEX entry price (USD)</label><input id="eHP" type="number" placeholder="0.000050" step="0.000001" oninput="sim()"></div>
+    <div class="ifield"><label>PLS entry price (USD)</label><input id="ePP" type="number" placeholder="0.000070" step="0.0000001" oninput="sim()"></div>
+    <div class="ifield"><label>Fees earned (USD)</label><input id="eFees" type="number" value="0" step="1" oninput="sim()"><div class="hint">Optional — offsets IL in results</div></div>
+  </div>
+</div>
+
+<!-- DUAL SLIDERS -->
+<div class="sec">
+  <div class="sec-hd">Set Target Prices — Move Both Independently</div>
+  <div class="sliders-wrap">
+    <div class="slider-row">
+      <div class="sl-head">
+        <span class="sl-label hex">pHEX target price</span>
+        <div class="sl-vals">
+          <span class="sl-price" id="hexSlVal">—</span>
+          <span class="sl-mult flat" id="hexSlMult">1×</span>
+        </div>
+      </div>
+      <input type="range" class="hex-range" id="slHex" min="1" max="2000" value="100" oninput="sim()">
+      <div class="sl-ends"><span id="slHexMin">—</span><span style="color:var(--mu2)">entry price ↑</span><span id="slHexMax">—</span></div>
+    </div>
+    <div class="slider-row">
+      <div class="sl-head">
+        <span class="sl-label pls">PLS target price</span>
+        <div class="sl-vals">
+          <span class="sl-price" id="plsSlVal">—</span>
+          <span class="sl-mult flat" id="plsSlMult">1×</span>
+        </div>
+      </div>
+      <input type="range" class="pls-range" id="slPls" min="1" max="2000" value="100" oninput="sim()">
+      <div class="sl-ends"><span id="slPlsMin">—</span><span style="color:var(--mu2)">entry price ↑</span><span id="slPlsMax">—</span></div>
+    </div>
+  </div>
+
+  <!-- RATIO INSIGHT -->
+  <div class="ratio-insight" id="ratioInsight">
+    <div class="ri-item"><div class="ri-label">Ratio r (relative move)</div><div class="ri-val" id="riR">—</div><div class="ri-sub">new pHEX/PLS ÷ entry pHEX/PLS</div></div>
+    <div class="ri-item"><div class="ri-label">pHEX move</div><div class="ri-val" id="riHex">—</div></div>
+    <div class="ri-item"><div class="ri-label">PLS move</div><div class="ri-val" id="riPls">—</div></div>
+    <div class="ri-item"><div class="ri-label">Correlation</div><div class="ri-val" id="riCorr">—</div></div>
+    <div class="ri-verdict flat" id="riVerdict">Set prices to see insight</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-grid" id="resultsGrid">
+    <div class="rc"><div class="rc-label">Waiting</div><div class="rc-val" style="color:var(--mu);font-size:13px">Enter position above</div></div>
+  </div>
+
+  <!-- IL BAR -->
+  <div id="ilSection" style="display:none">
+    <div class="il-row">
+      <span class="il-label">Raw IL</span>
+      <div class="il-track"><div class="il-fill" id="ilRawFill" style="width:0%"></div></div>
+      <span class="il-pct" id="ilRawPct" style="color:var(--red)">0%</span>
+    </div>
+    <div class="il-row">
+      <span class="il-label">IL net of fees</span>
+      <div class="il-track"><div class="il-fill" id="ilNetFill" style="width:0%"></div></div>
+      <span class="il-pct" id="ilNetPct">0%</span>
+    </div>
+  </div>
+</div>
+
+<!-- SCENARIO TABLES -->
+<div class="sec">
+  <div class="sec-hd">Scenario Tables</div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchT('t1',this)">pHEX moves, PLS fixed</button>
+    <button class="tab" onclick="switchT('t2',this)">PLS moves, pHEX fixed</button>
+    <button class="tab" onclick="switchT('t3',this)">Both move together</button>
+    <button class="tab" onclick="switchT('t4',this)">Full correlation matrix</button>
+  </div>
+
+  <div class="tpanel active" id="t1">
+    <div class="sc-note">pHEX price moves across a range while PLS stays at entry price. Classic single-asset move scenario. Shows how your token counts and IL change as pHEX alone pumps or dumps.</div>
+    <table class="sc" id="tbl1"><thead></thead><tbody></tbody></table>
+  </div>
+  <div class="tpanel" id="t2">
+    <div class="sc-note">PLS price moves across a range while pHEX stays at entry price. The mirror image — what if PLS is the one that pumps?</div>
+    <table class="sc" id="tbl2"><thead></thead><tbody></tbody></table>
+  </div>
+  <div class="tpanel" id="t3">
+    <div class="sc-note">Both assets move by the same percentage simultaneously. This is the correlated move scenario — <b style="color:var(--grn)">when both move together by the same %, your token counts do not change at all</b> and there is zero IL. The more correlated the moves, the less IL you experience.</div>
+    <table class="sc" id="tbl3"><thead></thead><tbody></tbody></table>
+  </div>
+  <div class="tpanel" id="t4">
+    <div class="sc-note">Full matrix: rows = pHEX price multiples, columns = PLS price multiples. Each cell shows IL%. <span style="color:var(--grn)">Green = low IL</span>, <span style="color:var(--amb)">amber = moderate</span>, <span style="color:var(--red)">red = high IL</span>. Notice the diagonal (where both move equally) is always 0%.</div>
+    <div id="matrixWrap"></div>
+  </div>
+
+  <div class="insight-box">
+    <b>The key insight this tool reveals:</b> Impermanent loss is entirely determined by the <em>relative</em> price change between your two assets, not their individual USD moves. If pHEX goes 5× and PLS goes 5×, your token counts are identical to entry and IL is exactly 0%. If pHEX goes 10× and PLS goes 5×, the ratio r = 2 and IL is only 5.7% — far less than if only pHEX moved 10× (IL would be 13.4%). The more correlated your two assets, the better your LP position performs relative to holding.
+  </div>
+</div>
+
+</div>
+
+<script>
+const PHEX='0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39';
+const WPLS='0xA1077a294dDE1B09bB078844df40758a5D0f9a27';
+let L={hexUsd:0,plsUsd:0,ratio:0,hexChg:0,plsChg:0,loaded:false};
+
+const fP=n=>{if(!n||isNaN(n))return'—';if(n>=1)return'$'+n.toFixed(4);if(n>=0.01)return'$'+n.toFixed(5);if(n>=0.001)return'$'+n.toFixed(6);if(n>=0.0001)return'$'+n.toFixed(7);return'$'+n.toFixed(8);};
+const fN=n=>{if(!n||isNaN(n))return'—';return n>=1e6?n.toLocaleString(undefined,{maximumFractionDigits:0}):n.toLocaleString(undefined,{maximumFractionDigits:2});};
+const fB=n=>{if(!n||isNaN(n))return'—';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return'$'+(n/1e3).toFixed(1)+'K';return'$'+n.toFixed(2);};
+const f2=n=>(n>=0?'+':'')+n.toFixed(1)+'%';
+const fc=n=>n>0.5?'up':n<-0.5?'dn':'fl';
+const fR=n=>{if(!n||isNaN(n))return'—';return n>=1000?n.toLocaleString(undefined,{maximumFractionDigits:0}):n.toFixed(2);};
+
+function switchT(id,btn){
+  document.querySelectorAll('.tpanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function loadLive(){
+  try{
+    const[hr,pr]=await Promise.all([
+      fetch('https://api.dexscreener.com/latest/dex/tokens/'+PHEX).then(r=>r.json()),
+      fetch('https://api.dexscreener.com/latest/dex/tokens/'+WPLS).then(r=>r.json())
+    ]);
+    const hp=(hr.pairs||[]).filter(p=>p.chainId==='pulsechain'&&p.dexId==='pulsex').sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+    const pp=(pr.pairs||[]).filter(p=>p.chainId==='pulsechain'&&p.dexId==='pulsex').sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+    if(hp){L.hexUsd=parseFloat(hp.priceUsd)||0;L.hexChg=parseFloat(hp.priceChange?.h24||0);L.ratio=parseFloat(hp.priceNative)||0;}
+    if(pp){L.plsUsd=parseFloat(pp.priceUsd)||0;L.plsChg=parseFloat(pp.priceChange?.h24||0);}
+    if(!L.ratio&&L.hexUsd>0&&L.plsUsd>0)L.ratio=L.hexUsd/L.plsUsd;
+    L.loaded=true;
+    document.getElementById('lHex').textContent=fP(L.hexUsd);
+    const hc=document.getElementById('lHexC');hc.textContent=(L.hexChg>=0?'▲ ':'▼ ')+Math.abs(L.hexChg).toFixed(2)+'% 24h';hc.className='pb-chg '+fc(L.hexChg);
+    document.getElementById('lPls').textContent=fP(L.plsUsd);
+    const pc=document.getElementById('lPlsC');pc.textContent=(L.plsChg>=0?'▲ ':'▼ ')+Math.abs(L.plsChg).toFixed(2)+'% 24h';pc.className='pb-chg '+fc(L.plsChg);
+    document.getElementById('lRatio').textContent=fR(L.ratio)+' PLS';
+    document.getElementById('updEl').textContent='Updated '+new Date().toLocaleTimeString();
+    sim();
+  }catch(e){document.getElementById('updEl').textContent='Error loading';}
+}
+
+function fillFromLive(){
+  if(!L.loaded){alert('Still loading, try again in a moment.');return;}
+  document.getElementById('eHP').value=L.hexUsd;
+  document.getElementById('ePP').value=L.plsUsd;
+  sim();
+}
+
+/* ── CORE SIMULATION ── */
+// r = (newHexUsd / newPlsUsd) / (entryHexUsd / entryPlsUsd)
+// This is the relative price ratio — the ONLY thing that determines IL
+// newHex = entryHex / sqrt(r)
+// newPls = entryPls * sqrt(r)
+// IL% = 2*sqrt(r)/(1+r) - 1
+
+function calcLP(entryHex, entryPls, entryHexP, entryPlsP, newHexP, newPlsP){
+  const entryRatioUsd = entryHexP / entryPlsP; // pHEX per PLS at entry in USD terms
+  const newRatioUsd   = newHexP  / newPlsP;    // pHEX per PLS at target in USD terms
+  const r = newRatioUsd / entryRatioUsd;        // relative ratio change — the key number
+  const sqR = Math.sqrt(r);
+  const newHex = entryHex / sqR;
+  const newPls = entryPls * sqR;
+  const lpUsd  = newHex * newHexP + newPls * newPlsP;
+  const holdUsd= entryHex * newHexP + entryPls * newPlsP;
+  const entryUsd=entryHex*entryHexP + entryPls*entryPlsP;
+  const il = (2*sqR/(1+r)-1)*100;
+  const ilUsd = lpUsd - holdUsd;
+  return {r, sqR, newHex, newPls, lpUsd, holdUsd, entryUsd, il, ilUsd};
+}
+
+function sim(){
+  const eHP=parseFloat(document.getElementById('eHP').value)||0;
+  const ePP=parseFloat(document.getElementById('ePP').value)||0;
+  const eHA=parseFloat(document.getElementById('eHA').value)||0;
+  const ePA=parseFloat(document.getElementById('ePA').value)||0;
+  const fees=parseFloat(document.getElementById('eFees').value)||0;
+
+  // Update slider labels
+  const hexSlPct=parseInt(document.getElementById('slHex').value);
+  const plsSlPct=parseInt(document.getElementById('slPls').value);
+  const tHP = eHP>0 ? eHP*hexSlPct/100 : 0;
+  const tPP = ePP>0 ? ePP*plsSlPct/100 : 0;
+
+  if(eHP>0){
+    document.getElementById('slHexMin').textContent=fP(eHP*0.01);
+    document.getElementById('slHexMax').textContent=fP(eHP*20);
+    document.getElementById('hexSlVal').textContent=fP(tHP);
+    const hm=hexSlPct/100;
+    const hmEl=document.getElementById('hexSlMult');
+    hmEl.textContent=hm.toFixed(2)+'×';
+    hmEl.className='sl-mult '+(hm>1.05?'up':hm<0.95?'dn':'flat');
+  }
+  if(ePP>0){
+    document.getElementById('slPlsMin').textContent=fP(ePP*0.01);
+    document.getElementById('slPlsMax').textContent=fP(ePP*20);
+    document.getElementById('plsSlVal').textContent=fP(tPP);
+    const pm=plsSlPct/100;
+    const pmEl=document.getElementById('plsSlMult');
+    pmEl.textContent=pm.toFixed(2)+'×';
+    pmEl.className='sl-mult '+(pm>1.05?'up':pm<0.95?'dn':'flat');
+  }
+
+  if(!eHP||!ePP||!eHA||!ePA){
+    buildTables(eHA,ePA,eHP,ePP,fees);
+    return;
+  }
+
+  const c=calcLP(eHA,ePA,eHP,ePP,tHP,tPP);
+  const hexMove=(hexSlPct/100-1)*100;
+  const plsMove=(plsSlPct/100-1)*100;
+
+  // Ratio insight
+  document.getElementById('riR').textContent=c.r.toFixed(4)+'×';
+  document.getElementById('riR').style.color=Math.abs(c.r-1)<0.05?'var(--grn)':Math.abs(c.r-1)<0.25?'var(--amb)':'var(--red)';
+  document.getElementById('riHex').textContent=f2(hexMove);
+  document.getElementById('riHex').style.color=hexMove>0?'var(--grn)':hexMove<0?'var(--red)':'var(--mu2)';
+  document.getElementById('riPls').textContent=f2(plsMove);
+  document.getElementById('riPls').style.color=plsMove>0?'var(--grn)':plsMove<0?'var(--red)':'var(--mu2)';
+
+  // Correlation assessment
+  const corr = hexMove!==0&&plsMove!==0 ? Math.min(hexMove,plsMove)/Math.max(Math.abs(hexMove),Math.abs(plsMove)) : hexMove===plsMove?1:0;
+  const corrPct=(corr*100).toFixed(0)+'%';
+  document.getElementById('riCorr').textContent=corrPct;
+  document.getElementById('riCorr').style.color=corr>0.8?'var(--grn)':corr>0.4?'var(--amb)':'var(--red)';
+
+  const vEl=document.getElementById('riVerdict');
+  if(Math.abs(c.r-1)<0.02){
+    vEl.className='ri-verdict great';
+    vEl.textContent='Both assets moved almost identically — near-zero IL. This is the LP sweet spot.';
+  } else if(Math.abs(c.r-1)<0.15){
+    vEl.className='ri-verdict good';
+    vEl.textContent='Moderate ratio change — IL is modest. The correlated moves are working in your favour.';
+  } else if(Math.abs(c.r-1)<0.5){
+    vEl.className='ri-verdict warn';
+    vEl.textContent='Significant ratio divergence — IL is building. The two assets are separating from each other.';
+  } else {
+    vEl.className='ri-verdict bad';
+    vEl.textContent='Large ratio divergence — substantial IL. Holding would have outperformed LP significantly at these prices.';
+  }
+
+  // Results cards
+  const ilNet=c.il+(fees/c.entryUsd*100);
+  document.getElementById('resultsGrid').innerHTML=`
+    <div class="rc hex-card">
+      <div class="rc-label">pHEX in LP now</div>
+      <div class="rc-val">${fN(c.newHex)}</div>
+      <div class="rc-sub">${fB(c.newHex*tHP)} USD</div>
+      <div class="rc-chg ${c.newHex>=eHA?'up':'dn'}">${c.newHex>=eHA?'+':''}${((c.newHex/eHA-1)*100).toFixed(2)}% vs entry (${fN(eHA)})</div>
+    </div>
+    <div class="rc pls-card">
+      <div class="rc-label">PLS in LP now</div>
+      <div class="rc-val">${fN(c.newPls)}</div>
+      <div class="rc-sub">${fB(c.newPls*tPP)} USD</div>
+      <div class="rc-chg ${c.newPls>=ePA?'up':'dn'}">${c.newPls>=ePA?'+':''}${((c.newPls/ePA-1)*100).toFixed(2)}% vs entry (${fN(ePA)})</div>
+    </div>
+    <div class="rc grn-card">
+      <div class="rc-label">LP total value</div>
+      <div class="rc-val">${fB(c.lpUsd+fees)}</div>
+      <div class="rc-sub">inc. ${fB(fees)} fees · entry ${fB(c.entryUsd)}</div>
+      <div class="rc-chg ${(c.lpUsd+fees)>=c.entryUsd?'up':'dn'}">${fB(c.lpUsd+fees-c.entryUsd)} vs entry</div>
+    </div>
+    <div class="rc">
+      <div class="rc-label">If you just held</div>
+      <div class="rc-val">${fB(c.holdUsd)}</div>
+      <div class="rc-sub">No LP — both tokens held</div>
+    </div>
+    <div class="rc ${(c.lpUsd+fees)<c.holdUsd?'warn-card':'grn-card'}">
+      <div class="rc-label">LP vs holding</div>
+      <div class="rc-val" style="color:${(c.lpUsd+fees)>=c.holdUsd?'var(--grn)':'var(--red)'}">${fB(Math.abs(c.lpUsd+fees-c.holdUsd))}</div>
+      <div class="rc-sub">${(c.lpUsd+fees)>=c.holdUsd?'LP ahead of holding':'LP behind holding'}</div>
+      <div class="rc-chg ${(c.lpUsd+fees)>=c.holdUsd?'up':'dn'}">${c.il.toFixed(3)}% raw IL · ratio r=${c.r.toFixed(3)}</div>
+    </div>
+    <div class="rc">
+      <div class="rc-label">Relative price ratio r</div>
+      <div class="rc-val" style="color:${Math.abs(c.r-1)<0.05?'var(--grn)':Math.abs(c.r-1)<0.25?'var(--amb)':'var(--red)'}">${c.r.toFixed(4)}</div>
+      <div class="rc-sub">1.0 = no IL · further from 1 = more IL</div>
+    </div>
+  `;
+
+  // IL bars
+  document.getElementById('ilSection').style.display='block';
+  const ilAbs=Math.abs(c.il);
+  const ilNetAbs=Math.max(0,Math.abs(c.il)-Math.abs(fees/c.entryUsd*100));
+  const ilColor=ilAbs<2?'var(--grn)':ilAbs<5?'var(--amb)':'var(--red)';
+  document.getElementById('ilRawFill').style.width=Math.min(ilAbs*5,100)+'%';
+  document.getElementById('ilRawFill').style.background=ilColor;
+  document.getElementById('ilRawPct').textContent=c.il.toFixed(3)+'%';
+  document.getElementById('ilRawPct').style.color=ilColor;
+  document.getElementById('ilNetFill').style.width=Math.min(ilNetAbs*5,100)+'%';
+  document.getElementById('ilNetFill').style.background=ilNetAbs<1?'var(--grn)':ilNetAbs<3?'var(--amb)':'var(--red)';
+  document.getElementById('ilNetPct').textContent=(c.il+(fees>0?fees/c.entryUsd*100:0)).toFixed(3)+'% net';
+  document.getElementById('ilNetPct').style.color=ilNetAbs<1?'var(--grn)':'var(--red)';
+
+  buildTables(eHA,ePA,eHP,ePP,fees);
+}
+
+function buildTables(eHA,ePA,eHP,ePP,fees){
+  if(!eHP||!ePP||!eHA||!ePA) return;
+
+  const mults=[0.1,0.25,0.5,0.75,1,1.5,2,3,5,10];
+
+  // TABLE 1: pHEX moves, PLS fixed
+  const t1=document.getElementById('tbl1');
+  t1.querySelector('thead').innerHTML='<tr><th>pHEX price</th><th>pHEX mult</th><th>pHEX in LP</th><th>PLS in LP</th><th>LP value</th><th>Hold value</th><th>IL%</th><th>LP vs Hold</th></tr>';
+  t1.querySelector('tbody').innerHTML=mults.map(m=>{
+    const c=calcLP(eHA,ePA,eHP,ePP,eHP*m,ePP);
+    const cur=Math.abs(m-1)<0.05;
+    return`<tr ${cur?'class="cur-row"':''}><td style="color:var(--hex)">${fP(eHP*m)}${cur?' ←':''}</td><td class="${m>1?'cell-grn':m<1?'cell-red':'cell-mu'}">${m}×</td><td>${fN(c.newHex)}<span class="cell-mu" style="font-size:9px"> ${((c.newHex/eHA-1)*100).toFixed(1)}%</span></td><td>${fN(c.newPls)}<span class="cell-mu" style="font-size:9px"> ${((c.newPls/ePA-1)*100).toFixed(1)}%</span></td><td>${fB(c.lpUsd+fees)}</td><td>${fB(c.holdUsd)}</td><td class="${Math.abs(c.il)<2?'cell-grn':Math.abs(c.il)<5?'cell-amb':'cell-red'}">${c.il.toFixed(2)}%</td><td class="${(c.lpUsd+fees)>=c.holdUsd?'cell-grn':'cell-red'}">${fB(Math.abs(c.lpUsd+fees-c.holdUsd))} ${(c.lpUsd+fees)>=c.holdUsd?'▲':'▼'}</td></tr>`;
+  }).join('');
+
+  // TABLE 2: PLS moves, pHEX fixed
+  const t2=document.getElementById('tbl2');
+  t2.querySelector('thead').innerHTML='<tr><th>PLS price</th><th>PLS mult</th><th>pHEX in LP</th><th>PLS in LP</th><th>LP value</th><th>Hold value</th><th>IL%</th><th>LP vs Hold</th></tr>';
+  t2.querySelector('tbody').innerHTML=mults.map(m=>{
+    const c=calcLP(eHA,ePA,eHP,ePP,eHP,ePP*m);
+    const cur=Math.abs(m-1)<0.05;
+    return`<tr ${cur?'class="cur-row"':''}><td style="color:var(--pls)">${fP(ePP*m)}${cur?' ←':''}</td><td class="${m>1?'cell-grn':m<1?'cell-red':'cell-mu'}">${m}×</td><td>${fN(c.newHex)}<span class="cell-mu" style="font-size:9px"> ${((c.newHex/eHA-1)*100).toFixed(1)}%</span></td><td>${fN(c.newPls)}<span class="cell-mu" style="font-size:9px"> ${((c.newPls/ePA-1)*100).toFixed(1)}%</span></td><td>${fB(c.lpUsd+fees)}</td><td>${fB(c.holdUsd)}</td><td class="${Math.abs(c.il)<2?'cell-grn':Math.abs(c.il)<5?'cell-amb':'cell-red'}">${c.il.toFixed(2)}%</td><td class="${(c.lpUsd+fees)>=c.holdUsd?'cell-grn':'cell-red'}">${fB(Math.abs(c.lpUsd+fees-c.holdUsd))} ${(c.lpUsd+fees)>=c.holdUsd?'▲':'▼'}</td></tr>`;
+  }).join('');
+
+  // TABLE 3: Both move together
+  const t3=document.getElementById('tbl3');
+  t3.querySelector('thead').innerHTML='<tr><th>Both move</th><th>pHEX in LP</th><th>PLS in LP</th><th>Token count change</th><th>LP value</th><th>Hold value</th><th>IL%</th></tr>';
+  t3.querySelector('tbody').innerHTML=mults.map(m=>{
+    const c=calcLP(eHA,ePA,eHP,ePP,eHP*m,ePP*m);
+    const cur=Math.abs(m-1)<0.05;
+    return`<tr ${cur?'class="cur-row"':''}><td class="${m>1?'cell-grn':m<1?'cell-red':'cell-mu'}">${m}× (${f2((m-1)*100)})</td><td>${fN(c.newHex)}</td><td>${fN(c.newPls)}</td><td class="cell-grn">No change (r=1.000)</td><td>${fB(c.lpUsd+fees)}</td><td>${fB(c.holdUsd)}</td><td class="cell-grn">0.000%</td></tr>`;
+  }).join('');
+
+  // MATRIX: IL% for all combinations
+  const matMults=[0.25,0.5,1,1.5,2,3,5,10];
+  let matHtml='<div style="overflow-x:auto"><table class="sc"><thead><tr><th>pHEX↓ PLS→</th>';
+  matMults.forEach(pm=>{ matHtml+=`<th style="color:var(--pls)">${pm}×</th>`; });
+  matHtml+='</tr></thead><tbody>';
+  matMults.forEach(hm=>{
+    matHtml+=`<tr><td style="color:var(--hex);font-weight:700">${hm}×</td>`;
+    matMults.forEach(pm=>{
+      const c=calcLP(eHA,ePA,eHP,ePP,eHP*hm,ePP*pm);
+      const il=c.il;
+      const isD=Math.abs(hm-pm)<0.01;
+      const cls=isD?'cell-grn':Math.abs(il)<2?'cell-grn':Math.abs(il)<5?'cell-amb':'cell-red';
+      matHtml+=`<td class="${cls}" ${isD?'style="font-weight:700"':''}>${il.toFixed(1)}%</td>`;
+    });
+    matHtml+='</tr>';
+  });
+  matHtml+='</tbody></table></div>';
+  document.getElementById('matrixWrap').innerHTML=matHtml;
+}
+
+loadLive();
+setInterval(loadLive,60000);
+</script>
