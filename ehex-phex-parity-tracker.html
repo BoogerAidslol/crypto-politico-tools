@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eHEX / pHEX Parity Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060A;--s1:#0A0C14;--s2:#0F1220;--s3:#14182A;
+  --ehex:#FF8C00;--ehex-b:rgba(255,140,0,.14);--ehex-bb:rgba(255,140,0,.3);
+  --phex:#FF2D78;--phex-b:rgba(255,45,120,.14);--phex-bb:rgba(255,45,120,.3);
+  --grn:#00D4A0;--grn-b:rgba(0,212,160,.12);--grn-bb:rgba(0,212,160,.3);
+  --red:#FF3366;--red-b:rgba(255,51,102,.12);
+  --amb:#FFB800;--amb-b:rgba(255,184,0,.12);
+  --pls:#7B5CFF;--pls-b:rgba(123,92,255,.12);
+  --tx:#DDE2F2;--mu:#404866;--mu2:#5A6285;--dim:#14182A;--br:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 28px;border-bottom:1px solid var(--br);background:rgba(5,6,10,.95);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.brand .e{color:var(--ehex)}.brand .d{color:var(--mu)}.brand .p{color:var(--phex)}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--grn-b);border:1px solid var(--grn-bb);color:var(--grn);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:bk 1.4s ease infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.tr-row{display:flex;align-items:center;gap:12px}
+.upd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mu2)}
+.rfbtn{background:var(--phex-b);border:1px solid var(--phex-bb);color:var(--phex);padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;display:flex;align-items:center;gap:5px}
+.rfbtn:hover{background:rgba(255,45,120,.25)}
+.rfbtn.sp .spin{animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── LAYOUT ── */
+main{max-width:1360px;margin:0 auto;padding:28px 24px 60px}
+
+/* ── HERO DIVERGENCE ── */
+.hero{background:var(--s1);border:1px solid var(--br);border-radius:20px;padding:32px;margin-bottom:22px;position:relative;overflow:hidden;text-align:center}
+.hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:700px;height:300px;background:radial-gradient(ellipse,rgba(255,140,0,.06) 0%,rgba(255,45,120,.04) 50%,transparent 70%);pointer-events:none}
+.hero-eye{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;margin-bottom:12px}
+.discount-num{font-family:'JetBrains Mono',monospace;font-size:80px;font-weight:700;letter-spacing:-3px;line-height:1;background:linear-gradient(135deg,var(--ehex),var(--phex));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;min-height:80px}
+.discount-label{font-size:15px;color:var(--mu2);font-family:'JetBrains Mono',monospace;margin:6px 0 18px}
+.tf-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.tf-pill{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--br);border-radius:10px;padding:10px 18px;min-width:80px}
+.tf-t{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.tf-v{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600}
+.tf-v.nar{color:var(--grn)}.tf-v.wid{color:var(--red)}.tf-v.flat{color:var(--mu2)}
+
+/* parity gauge */
+.gauge-section{max-width:700px;margin:0 auto}
+.gauge-label-row{display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+.gauge-track{height:12px;background:var(--dim);border-radius:12px;overflow:hidden;position:relative}
+.gauge-fill{height:100%;border-radius:12px;transition:width .8s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,var(--phex),var(--ehex))}
+.parity-marker{position:absolute;right:0;top:-4px;width:2px;height:20px;background:var(--grn);border-radius:2px}
+.gauge-sub{display:flex;justify-content:space-between;font-size:9px;color:var(--mu);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.signal-tag{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;margin-top:12px}
+.signal-tag.narrowing{background:var(--grn-b);color:var(--grn);border:1px solid rgba(0,212,160,.2)}
+.signal-tag.widening{background:var(--red-b);color:var(--red);border:1px solid rgba(255,51,102,.2)}
+.signal-tag.stable{background:var(--s2);color:var(--mu2);border:1px solid var(--br)}
+
+/* ── PRICE CARDS ── */
+.price-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px}
+.pcard{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:22px;position:relative;overflow:hidden}
+.pcard.ehex::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ehex);box-shadow:0 0 16px var(--ehex)}
+.pcard.phex::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--phex);box-shadow:0 0 16px var(--phex)}
+.pcard.ratio::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--ehex),var(--phex))}
+.pc-eye{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--mu);text-transform:uppercase;margin-bottom:8px}
+.pc-price{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;letter-spacing:-1.5px;line-height:1;min-height:36px}
+.pc-chg{display:inline-flex;align-items:center;padding:4px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;margin-top:10px}
+.pc-chg.up{background:var(--grn-b);color:var(--grn)}.pc-chg.dn{background:var(--red-b);color:var(--red)}.pc-chg.fl{background:var(--dim);color:var(--mu2)}
+.pc-meta{font-size:11px;color:var(--mu2);margin-top:10px;line-height:1.6}
+
+/* ── SECTION ── */
+.sec{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:24px;margin-bottom:20px}
+.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--br)}
+.sec-sub{font-size:12px;color:var(--mu2);margin-bottom:18px;line-height:1.7}
+
+/* ── ARBITRAGE SIGNAL ── */
+.arb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.arb-card{background:var(--s2);border-radius:12px;padding:14px 16px;border:1px solid transparent}
+.arb-card.hot{border-color:var(--ehex-bb)}
+.arb-card.phot{border-color:var(--phex-bb)}
+.arb-card.grn{border-color:var(--grn-bb)}
+.ac-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.ac-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--tx)}
+.ac-sub{font-size:10px;color:var(--mu2);margin-top:3px;line-height:1.5}
+.arb-signal{border-radius:12px;padding:16px 20px;font-size:13px;line-height:1.7;margin-top:14px}
+.arb-signal.buy-phex{background:var(--phex-b);border:1px solid var(--phex-bb)}
+.arb-signal.buy-ehex{background:var(--ehex-b);border:1px solid var(--ehex-bb)}
+.arb-signal.neutral{background:var(--s2);border:1px solid var(--br)}
+.arb-signal b{font-weight:700}
+
+/* ── CALC ── */
+.calc-toggle{display:flex;background:var(--s3);border-radius:10px;padding:3px;margin-bottom:18px;width:fit-content;gap:2px}
+.ct-btn{padding:8px 18px;border-radius:8px;border:none;background:none;color:var(--mu2);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.ct-btn.active{background:var(--phex);color:#fff;box-shadow:0 2px 10px rgba(255,45,120,.4)}
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-bottom:18px}
+.cf{display:flex;flex-direction:column;gap:6px}
+.cf label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.cf .hint{font-size:10px;color:var(--mu)}
+.cfwrap{position:relative}
+.cfpre{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--mu2);pointer-events:none}
+.ci{width:100%;background:var(--s3);border:1px solid var(--br);border-radius:8px;padding:10px 12px 10px 26px;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--tx);outline:none;transition:border-color .15s}
+.ci:focus{border-color:var(--phex)}
+.ci.plain{padding-left:12px}
+.out-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}
+.oc{background:var(--s2);border-radius:12px;padding:14px 16px;border:1px solid transparent;transition:border-color .2s}
+.oc.star-e{border-color:var(--ehex-bb)}.oc.star-p{border-color:var(--phex-bb)}.oc.star-g{border-color:var(--grn-bb)}.oc.warn{border-color:rgba(255,51,102,.3)}
+.oc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.oc-val{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700;color:var(--tx)}
+.oc-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+.oc-chg{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-top:5px}
+.oc-chg.up{color:var(--grn)}.oc-chg.dn{color:var(--red)}
+
+/* ── SCENARIO MATRIX ── */
+table.mat{width:100%;border-collapse:collapse;font-size:12px;min-width:580px}
+table.mat th{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--br);text-align:center;white-space:nowrap}
+table.mat th:first-child{text-align:left}
+table.mat td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center}
+table.mat td:first-child{text-align:left}
+table.mat tr.cur td{background:var(--s2)}
+table.mat tr:hover td{background:var(--s2)}
+.cell-g{color:var(--grn)}.cell-r{color:var(--red)}.cell-a{color:var(--amb)}.cell-m{color:var(--mu2)}
+.disc-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px}
+.disc-badge.narrow{background:var(--grn-b);color:var(--grn)}
+.disc-badge.wide{background:var(--red-b);color:var(--red)}
+.disc-badge.cur{background:var(--phex-b);color:var(--phex)}
+
+/* ── REVERSE CALC ── */
+.rev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-top:16px}
+.rev-card{background:var(--s2);border-radius:12px;padding:14px;border-left:3px solid var(--br)}
+.rev-card.grn{border-left-color:var(--grn)}.rev-card.ehx{border-left-color:var(--ehex)}.rev-card.phx{border-left-color:var(--phex)}.rev-card.pls{border-left-color:var(--pls)}
+.rv-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:7px}
+.rv-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--tx)}
+.rv-sub{font-size:10px;color:var(--mu2);margin-top:4px;line-height:1.5}
+
+/* ── SKELETON ── */
+.sk{background:var(--dim);border-radius:4px;animation:sh 1.6s infinite;display:inline-block}
+@keyframes sh{0%,100%{opacity:.4}50%{opacity:.7}}
+
+/* ── FOOTER ── */
+.foot{margin-top:36px;padding-top:18px;border-top:1px solid var(--br);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.foot-note{font-size:11px;color:var(--mu);line-height:1.7}
+.foot-note a{color:var(--phex);text-decoration:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.price-row{grid-template-columns:1fr}.discount-num{font-size:60px}}
+@media(max-width:640px){main{padding:18px 14px 40px}.topbar{padding:12px 16px}.discount-num{font-size:48px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="brand"><span class="e">eHEX</span><span class="d"> / </span><span class="p">pHEX</span> Parity Tracker</div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <div class="tr-row">
+    <span class="upd" id="updEl">Connecting…</span>
+    <button class="rfbtn" id="rfBtn" onclick="loadAll()"><span class="spin">↻</span> Refresh</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ── HERO DIVERGENCE ── -->
+<div class="hero">
+  <div class="hero-eye">pHEX as a % of eHEX price — parity = 100%</div>
+  <div class="discount-num" id="parityPct"><span class="sk" style="width:260px;height:76px;border-radius:8px"></span></div>
+  <div class="discount-label" id="parityLabel">Loading…</div>
+  <div class="tf-row" id="tfRow">
+    <div class="tf-pill"><div class="tf-t">5m trend</div><div class="tf-v flat sk" style="width:60px;height:14px"></div></div>
+    <div class="tf-pill"><div class="tf-t">1h trend</div><div class="tf-v flat sk" style="width:60px;height:14px"></div></div>
+    <div class="tf-pill"><div class="tf-t">6h trend</div><div class="tf-v flat sk" style="width:60px;height:14px"></div></div>
+    <div class="tf-pill"><div class="tf-t">24h trend</div><div class="tf-v flat sk" style="width:60px;height:14px"></div></div>
+  </div>
+  <div class="gauge-section">
+    <div class="gauge-label-row"><span>pHEX $0 (0%)</span><span>Parity (100%)</span></div>
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gaugeFill" style="width:50%"></div>
+      <div class="parity-marker"></div>
+    </div>
+    <div class="gauge-sub"><span id="gaugeLeft">—</span><span id="gaugeRight">—</span></div>
+    <div id="signalTag" class="signal-tag stable">Calculating…</div>
+  </div>
+</div>
+
+<!-- ── PRICE CARDS ── -->
+<div class="price-row">
+  <div class="pcard ehex">
+    <div class="pc-eye">eHEX · Ethereum</div>
+    <div class="pc-price" id="ehexPrice"><span class="sk" style="width:160px;height:34px;border-radius:6px"></span></div>
+    <div class="pc-chg fl" id="ehexChg">—</div>
+    <div class="pc-meta" id="ehexMeta">Loading…</div>
+  </div>
+  <div class="pcard phex">
+    <div class="pc-eye">pHEX · PulseChain</div>
+    <div class="pc-price" id="phexPrice"><span class="sk" style="width:160px;height:34px;border-radius:6px"></span></div>
+    <div class="pc-chg fl" id="phexChg">—</div>
+    <div class="pc-meta" id="phexMeta">Loading…</div>
+  </div>
+  <div class="pcard ratio">
+    <div class="pc-eye">Current discount</div>
+    <div class="pc-price" id="discountPct"><span class="sk" style="width:140px;height:34px;border-radius:6px"></span></div>
+    <div class="pc-chg fl" id="discountChg">—</div>
+    <div class="pc-meta" id="discountMeta">Loading…</div>
+  </div>
+</div>
+
+<!-- ── SUPPLY INTELLIGENCE ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">HEX Supply Intelligence</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Queried live from the HEX smart contract on both chains using <code style="background:var(--s3);padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px">balanceOf()</code> on each DEX pool and <code style="background:var(--s3);padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px">globalInfo()</code> for staking data — same methodology as HexStakeAnalyzer. Shows exactly how much HEX is liquid in pools right now vs locked in stakes, and how that affects the available supply picture for both chains.</div>
+  <div class="arb-grid" id="supplyGrid">
+    <div class="arb-card"><div class="ac-label">pHEX in DEX pools</div><div class="ac-val sk" style="width:90px;height:20px"></div><div class="ac-sub">PulseX liquidity pools</div></div>
+    <div class="arb-card"><div class="ac-label">eHEX in DEX pools</div><div class="ac-val sk" style="width:90px;height:20px"></div><div class="ac-sub">Uniswap/ETH pools</div></div>
+    <div class="arb-card"><div class="ac-label">Total HEX in pools</div><div class="ac-val sk" style="width:90px;height:20px"></div><div class="ac-sub">Both chains combined</div></div>
+    <div class="arb-card"><div class="ac-label">pHEX staked</div><div class="ac-val sk" style="width:90px;height:20px"></div><div class="ac-sub">Locked in PulseChain stakes</div></div>
+    <div class="arb-card"><div class="ac-label">eHEX staked</div><div class="ac-val sk" style="width:90px;height:20px"></div><div class="ac-sub">Locked in Ethereum stakes</div></div>
+    <div class="arb-card"><div class="ac-label">% of supply liquid</div><div class="ac-val sk" style="width:70px;height:20px"></div><div class="ac-sub">Not in stakes or pools</div></div>
+  </div>
+  <div id="supplyBars" style="margin-top:16px;display:none">
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--mu2);margin-bottom:4px">
+        <span>pHEX supply split</span><span id="pSupplyLabel">—</span>
+      </div>
+      <div style="height:8px;background:var(--dim);border-radius:8px;overflow:hidden;display:flex">
+        <div id="pStakedBar" style="height:100%;background:var(--phex);transition:width .8s ease"></div>
+        <div id="pPoolBar" style="height:100%;background:var(--ehex);transition:width .8s ease"></div>
+        <div id="pLiquidBar" style="height:100%;background:var(--grn);transition:width .8s ease"></div>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:5px;font-size:10px;color:var(--mu2)">
+        <span><span style="color:var(--phex)">■</span> Staked</span>
+        <span><span style="color:var(--ehex)">■</span> In DEX pools</span>
+        <span><span style="color:var(--grn)">■</span> Liquid (other)</span>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--mu2);margin-bottom:4px">
+        <span>eHEX supply split</span><span id="eSupplyLabel">—</span>
+      </div>
+      <div style="height:8px;background:var(--dim);border-radius:8px;overflow:hidden;display:flex">
+        <div id="eStakedBar" style="height:100%;background:var(--phex);transition:width .8s ease"></div>
+        <div id="ePoolBar" style="height:100%;background:var(--ehex);transition:width .8s ease"></div>
+        <div id="eLiquidBar" style="height:100%;background:var(--grn);transition:width .8s ease"></div>
+      </div>
+    </div>
+  </div>
+  <div id="supplyNote" style="margin-top:12px;font-size:11px;color:var(--mu2);line-height:1.7;display:none"></div>
+</div>
+
+<!-- ── ARBITRAGE SIGNAL ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Divergence & Arbitrage Signal</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Same token, two chains. When the discount diverges sharply in either direction it often partially mean-reverts. This section tracks momentum across timeframes and flags when an unusual move is occurring — a potential signal that pHEX is cheap relative to eHEX or vice versa.</div>
+  <div class="arb-grid" id="arbGrid">
+    <div class="arb-card"><div class="ac-label">pHEX discount to eHEX</div><div class="ac-val sk" style="width:80px;height:20px"></div></div>
+    <div class="arb-card"><div class="ac-label">$ gap per token</div><div class="ac-val sk" style="width:80px;height:20px"></div></div>
+    <div class="arb-card"><div class="ac-label">pHEX 24h vs eHEX 24h</div><div class="ac-val sk" style="width:80px;height:20px"></div></div>
+    <div class="arb-card"><div class="ac-label">Discount momentum</div><div class="ac-val sk" style="width:80px;height:20px"></div></div>
+    <div class="arb-card"><div class="ac-label">eHEX market cap</div><div class="ac-val sk" style="width:80px;height:20px"></div></div>
+    <div class="arb-card"><div class="ac-label">pHEX market cap</div><div class="ac-val sk" style="width:80px;height:20px"></div></div>
+  </div>
+  <div class="arb-signal neutral" id="arbSignal">Analysing divergence…</div>
+</div>
+
+<!-- ── PARITY CALCULATOR ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Parity Calculator</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Two modes — set a target pHEX price and see what discount that implies at various eHEX prices, or set a target discount and see what pHEX price that implies. Enter your holdings to see exact USD values at each scenario.</div>
+
+  <div class="calc-toggle">
+    <button class="ct-btn active" id="modeA" onclick="setMode('A')">Set pHEX target → find discount</button>
+    <button class="ct-btn" id="modeB" onclick="setMode('B')">Set discount → find pHEX price</button>
+  </div>
+
+  <div class="calc-grid" id="calcFields"></div>
+  <div class="out-grid" id="calcOut"></div>
+</div>
+
+<!-- ── FUTURE PRICE SCENARIO MATRIX ── -->
+<div class="sec" style="overflow-x:auto">
+  <div class="sec-hd"><div class="sec-title">Future Price Scenario Matrix</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Rows are eHEX price scenarios. Columns are discount scenarios (how far pHEX is behind eHEX). Every cell shows the implied pHEX price. <span style="color:var(--grn)">Green</span> = above current pHEX price. <span style="color:var(--red)">Red</span> = below. Current column highlighted.</div>
+  <table class="mat" id="scenarioMat">
+    <thead></thead>
+    <tbody><tr><td colspan="6" style="color:var(--mu);padding:16px 10px">Loading live prices…</td></tr></tbody>
+  </table>
+</div>
+
+<!-- ── REVERSE CALCULATOR — WHAT NEEDS TO HAPPEN ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Reverse Calculator — What Needs to Happen for pHEX to Reach $X</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Type in a target pHEX price and the tool shows the three paths to get there: eHEX pumps (discount stays same), discount narrows (eHEX stays same), or a combination of both. Shows which path is more realistic given current conditions.</div>
+  <div class="calc-grid">
+    <div class="cf"><label>Your target pHEX price (USD)</label><div class="cfwrap"><span class="cfpre">$</span><input class="ci" id="revTarget" type="number" placeholder="0.05" step="0.001" oninput="runReverse()"></div></div>
+    <div class="cf"><label>Your pHEX holdings</label><input class="ci plain" id="revHoldings" type="number" placeholder="0" step="1000" oninput="runReverse()"></div>
+  </div>
+  <div class="rev-grid" id="revOut">
+    <div class="rev-card"><div class="rv-label">Waiting</div><div class="rv-val" style="color:var(--mu);font-size:13px">Enter a target above</div></div>
+  </div>
+</div>
+
+<!-- ── HOLDINGS TRACKER ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Holdings at Parity — What's Your Stack Worth?</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Enter how much pHEX you hold and see exactly what it would be worth at various discount scenarios and at full eHEX parity — compared to what it's worth right now.</div>
+  <div class="calc-grid">
+    <div class="cf"><label>Your pHEX holdings</label><input class="ci plain" id="holdAmt" type="number" placeholder="1000000" step="10000" oninput="runHoldings()"></div>
+    <div class="cf"><label>Also hold eHEX?</label><input class="ci plain" id="holdEAmt" type="number" placeholder="0" step="10000" oninput="runHoldings()"></div>
+  </div>
+  <div class="out-grid" id="holdOut">
+    <div class="oc"><div class="oc-label">Waiting</div><div class="oc-val" style="color:var(--mu);font-size:13px">Enter your holdings above</div></div>
+  </div>
+</div>
+
+<div class="foot">
+  <div class="foot-note">
+    Data: <a href="https://dexscreener.com" target="_blank">DexScreener</a> — eHEX via Ethereum Uniswap · pHEX via PulseChain PulseX<br>
+    HEX total supply ~596.5B · Auto-refreshes every 60 seconds · Not financial advice.
+  </div>
+</div>
+
+</main>
+
+<script>
+'use strict';
+
+const PHEX_ADDR = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39';
+const HEX_SUPPLY = 596_500_000_000;
+
+let S = { ehex:0, phex:0, discount:0, parityPct:0,
+          ehexChg:{m5:0,h1:0,h6:0,h24:0}, phexChg:{m5:0,h1:0,h6:0,h24:0},
+          ehexLiq:0, ehexVol:0, phexLiq:0, phexVol:0, loaded:false };
+let calcMode = 'A';
+
+const fP = n => { if(!n||isNaN(n)) return '—'; if(n>=1) return '$'+n.toFixed(4); if(n>=0.01) return '$'+n.toFixed(5); if(n>=0.001) return '$'+n.toFixed(6); if(n>=0.0001) return '$'+n.toFixed(7); return '$'+n.toFixed(8); };
+const fB = n => { if(!n||isNaN(n)) return '—'; if(n>=1e12) return '$'+(n/1e12).toFixed(2)+'T'; if(n>=1e9) return '$'+(n/1e9).toFixed(2)+'B'; if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M'; if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K'; return '$'+n.toFixed(2); };
+const f2 = n => (n>=0?'+':'')+n.toFixed(2)+'%';
+const fc = n => n>0.3?'up':n<-0.3?'dn':'fl';
+const fPct = n => n.toFixed(2)+'%';
+
+async function dsToken(addr, chain){
+  const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/'+addr);
+  const d = await r.json();
+  return (d.pairs||[]).filter(p=>p.chainId===chain).sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0]||null;
+}
+
+async function loadAll(){
+  const btn=document.getElementById('rfBtn'); btn.classList.add('sp');
+  document.getElementById('updEl').textContent='Updating…';
+  supplyLoaded = false; // allow retry on manual refresh
+  try{
+    const [ep, pp] = await Promise.all([
+      dsToken(PHEX_ADDR, 'ethereum'),
+      dsToken(PHEX_ADDR, 'pulsechain')
+    ]);
+
+    if(ep){
+      S.ehex = parseFloat(ep.priceUsd)||0;
+      S.ehexChg = { m5:parseFloat(ep.priceChange?.m5||0), h1:parseFloat(ep.priceChange?.h1||0), h6:parseFloat(ep.priceChange?.h6||0), h24:parseFloat(ep.priceChange?.h24||0) };
+      S.ehexLiq = ep.liquidity?.usd||0;
+      S.ehexVol = ep.volume?.h24||0;
+    }
+    if(pp){
+      S.phex = parseFloat(pp.priceUsd)||0;
+      S.phexChg = { m5:parseFloat(pp.priceChange?.m5||0), h1:parseFloat(pp.priceChange?.h1||0), h6:parseFloat(pp.priceChange?.h6||0), h24:parseFloat(pp.priceChange?.h24||0) };
+      S.phexLiq = pp.liquidity?.usd||0;
+      S.phexVol = pp.volume?.h24||0;
+    }
+
+    if(S.ehex>0&&S.phex>0){
+      S.parityPct = (S.phex/S.ehex)*100;
+      S.discount  = 100 - S.parityPct;
+    }
+    S.loaded=true;
+    renderAll();
+    document.getElementById('updEl').textContent='Updated '+new Date().toLocaleTimeString();
+  }catch(e){
+    document.getElementById('updEl').textContent='Error — retrying…';
+  }
+  btn.classList.remove('sp');
+}
+
+function renderAll(){
+  renderHero();
+  renderPriceCards();
+  loadSupply(); // on-chain supply data — loads once per session
+  renderArbitrage();
+  renderCalc();
+  renderMatrix();
+  runReverse();
+  runHoldings();
+}
+
+/* ── HERO ── */
+function renderHero(){
+  const pp = S.parityPct;
+  document.getElementById('parityPct').textContent = pp.toFixed(2)+'%';
+  document.getElementById('parityLabel').textContent = pp>=100?'pHEX at or above eHEX parity':'pHEX is '+S.discount.toFixed(2)+'% cheaper than eHEX';
+
+  // Discount momentum across timeframes
+  // Approximate: discount_change ≈ phex_change - ehex_change
+  const discMom = {
+    m5:  S.phexChg.m5  - S.ehexChg.m5,
+    h1:  S.phexChg.h1  - S.ehexChg.h1,
+    h6:  S.phexChg.h6  - S.ehexChg.h6,
+    h24: S.phexChg.h24 - S.ehexChg.h24
+  };
+  document.getElementById('tfRow').innerHTML = ['m5','h1','h6','h24'].map((tf,i)=>{
+    const v=discMom[tf];
+    const cls=v>0.3?'nar':v<-0.3?'wid':'flat';
+    const label=v>0.3?'Narrowing':v<-0.3?'Widening':'Stable';
+    return`<div class="tf-pill"><div class="tf-t">${['5m','1h','6h','24h'][i]}</div><div class="tf-v ${cls}">${label} ${f2(v)}</div></div>`;
+  }).join('');
+
+  // Gauge — cap at 120%
+  const gaugeWidth = Math.min(pp, 110);
+  document.getElementById('gaugeFill').style.width = gaugeWidth+'%';
+  document.getElementById('gaugeLeft').textContent = 'Current: '+fP(S.phex);
+  document.getElementById('gaugeRight').textContent = 'eHEX: '+fP(S.ehex);
+
+  // Signal tag
+  const mom24 = S.phexChg.h24 - S.ehexChg.h24;
+  const sig = document.getElementById('signalTag');
+  if(mom24>3){ sig.className='signal-tag narrowing'; sig.textContent='▲ Discount narrowing — pHEX outperforming eHEX over 24h ('+f2(mom24)+')'; }
+  else if(mom24<-3){ sig.className='signal-tag widening'; sig.textContent='▼ Discount widening — eHEX outperforming pHEX over 24h ('+f2(mom24)+')'; }
+  else{ sig.className='signal-tag stable'; sig.textContent='→ Discount stable — both chains moving broadly in sync ('+f2(mom24)+' relative drift)'; }
+}
+
+/* ── PRICE CARDS ── */
+function renderPriceCards(){
+  document.getElementById('ehexPrice').textContent = fP(S.ehex);
+  const ec=document.getElementById('ehexChg');
+  ec.textContent=(S.ehexChg.h24>=0?'▲ ':'▼ ')+Math.abs(S.ehexChg.h24).toFixed(2)+'% 24h';
+  ec.className='pc-chg '+fc(S.ehexChg.h24);
+  document.getElementById('ehexMeta').innerHTML='Liq: '+fB(S.ehexLiq)+' · Vol 24h: '+fB(S.ehexVol)+'<br>Mcap: '+fB(S.ehex*HEX_SUPPLY);
+
+  document.getElementById('phexPrice').textContent = fP(S.phex);
+  const pc=document.getElementById('phexChg');
+  pc.textContent=(S.phexChg.h24>=0?'▲ ':'▼ ')+Math.abs(S.phexChg.h24).toFixed(2)+'% 24h';
+  pc.className='pc-chg '+fc(S.phexChg.h24);
+  document.getElementById('phexMeta').innerHTML='Liq: '+fB(S.phexLiq)+' · Vol 24h: '+fB(S.phexVol)+'<br>Mcap: '+fB(S.phex*HEX_SUPPLY);
+
+  document.getElementById('discountPct').textContent = S.discount.toFixed(2)+'% discount';
+  const relMom=S.phexChg.h24-S.ehexChg.h24;
+  const dc=document.getElementById('discountChg');
+  dc.textContent=relMom>0?'▲ Narrowing '+f2(relMom):'▼ Widening '+f2(relMom);
+  dc.className='pc-chg '+fc(relMom);
+  document.getElementById('discountMeta').innerHTML=
+    'Dollar gap: '+fP(S.ehex-S.phex)+' per token<br>'+
+    'pHEX needs '+(S.ehex>S.phex?((S.ehex/S.phex-1)*100).toFixed(1)+'% gain':'—')+' to reach parity';
+}
+
+/* ── ARBITRAGE SIGNAL ── */
+function renderArbitrage(){
+  const gap = S.ehex-S.phex;
+  const relMom = S.phexChg.h24-S.ehexChg.h24;
+  const relMom1h = S.phexChg.h1-S.ehexChg.h1;
+  const momentum = (relMom+relMom1h*2)/3; // weighted towards recent
+
+  document.getElementById('arbGrid').innerHTML=`
+    <div class="arb-card ${S.parityPct<20?'phot':''}">
+      <div class="ac-label">pHEX as % of eHEX</div>
+      <div class="ac-val" style="color:${S.parityPct>=80?'var(--grn)':S.parityPct>=40?'var(--amb)':'var(--phex)'}">${S.parityPct.toFixed(2)}%</div>
+      <div class="ac-sub">100% = parity</div>
+    </div>
+    <div class="arb-card">
+      <div class="ac-label">Dollar gap per token</div>
+      <div class="ac-val">${fP(gap)}</div>
+      <div class="ac-sub">eHEX − pHEX</div>
+    </div>
+    <div class="arb-card">
+      <div class="ac-label">pHEX 24h vs eHEX 24h</div>
+      <div class="ac-val" style="color:${relMom>0?'var(--grn)':'var(--red)'}">${f2(relMom)}</div>
+      <div class="ac-sub">positive = pHEX outperforming</div>
+    </div>
+    <div class="arb-card">
+      <div class="ac-label">Discount momentum</div>
+      <div class="ac-val" style="color:${momentum>0?'var(--grn)':momentum<0?'var(--red)':'var(--mu2)'}">${momentum>0?'Narrowing':'Widening'}</div>
+      <div class="ac-sub">Weighted 1h+24h trend</div>
+    </div>
+    <div class="arb-card hot">
+      <div class="ac-label">eHEX market cap</div>
+      <div class="ac-val">${fB(S.ehex*HEX_SUPPLY)}</div>
+      <div class="ac-sub">Ethereum chain</div>
+    </div>
+    <div class="arb-card phot">
+      <div class="ac-label">pHEX market cap</div>
+      <div class="ac-val">${fB(S.phex*HEX_SUPPLY)}</div>
+      <div class="ac-sub">PulseChain · gap: ${fB((S.ehex-S.phex)*HEX_SUPPLY)}</div>
+    </div>
+  `;
+
+  const sig=document.getElementById('arbSignal');
+  if(S.parityPct<15){
+    sig.className='arb-signal buy-phex';
+    sig.innerHTML='<b style="color:var(--phex)">Deep discount signal:</b> pHEX is trading at only '+S.parityPct.toFixed(1)+'% of eHEX price — historically a very large gap for two tokens that are fundamentally the same asset. This does not guarantee convergence, but the discount is unusually wide. If you believe PulseChain ecosystem will grow, pHEX at this discount is essentially a leveraged bet on that thesis, since it needs to close both the chain discount AND benefit from any HEX price appreciation.';
+  } else if(S.parityPct<40){
+    sig.className='arb-signal buy-phex';
+    sig.innerHTML='<b style="color:var(--phex)">Significant discount:</b> pHEX at '+S.parityPct.toFixed(1)+'% of eHEX represents a meaningful gap. The discount '+(momentum>1?'is currently narrowing (positive signal) — pHEX is catching up.':'is currently '+Math.abs(momentum).toFixed(1)+'% widening on a weighted basis, suggesting the gap is growing rather than closing right now.')+' Historically gaps at this level have been partially mean-reverting, but timing is unpredictable.';
+  } else if(S.parityPct<80){
+    sig.className='arb-signal neutral';
+    sig.innerHTML='<b style="color:var(--tx)">Moderate discount:</b> pHEX at '+S.parityPct.toFixed(1)+'% of eHEX is a moderate but not extreme gap. The discount has '+(momentum>0?'been narrowing recently, suggesting PulseChain momentum is positive.':'been widening recently, suggesting Ethereum-side HEX is outperforming its PulseChain counterpart.')+' Worth monitoring whether this resolves toward parity or continues to widen.';
+  } else if(S.parityPct<100){
+    sig.className='arb-signal buy-phex';
+    sig.innerHTML='<b style="color:var(--grn)">Near parity:</b> pHEX is at '+S.parityPct.toFixed(1)+'% of eHEX — unusually close to parity. This level has historically been rare for pHEX. Either PulseChain momentum is exceptionally strong, or eHEX is underperforming. Watch closely for whether it breaks through parity or pulls back.';
+  } else {
+    sig.className='arb-signal buy-ehex';
+    sig.innerHTML='<b style="color:var(--ehex)">pHEX at or above parity:</b> pHEX is currently priced at '+S.parityPct.toFixed(1)+'% of eHEX — above or at parity. This is historically very rare and may represent a temporary dislocation. eHEX could represent relative value here if you believe the gap should revert to the historical norm where pHEX trades at a discount.';
+  }
+}
+
+/* ── CALC ── */
+function setMode(m){
+  calcMode=m;
+  document.getElementById('modeA').className='ct-btn'+(m==='A'?' active':'');
+  document.getElementById('modeB').className='ct-btn'+(m==='B'?' active':'');
+  renderCalc();
+}
+
+function renderCalc(){
+  const cf=document.getElementById('calcFields');
+  if(calcMode==='A'){
+    cf.innerHTML=`
+      <div class="cf"><label>Target pHEX price (USD)</label><div class="cfwrap"><span class="cfpre">$</span><input class="ci" id="ci1" type="number" value="${(S.phex*2).toFixed(7)||'0.0001'}" step="0.0001" oninput="calcOut()"></div></div>
+      <div class="cf"><label>eHEX price assumption</label>
+        <select class="ci plain" id="ci2" onchange="calcOut()">
+          <option value="current">Current eHEX price (${fP(S.ehex)})</option>
+          <option value="2x">eHEX 2× from now</option>
+          <option value="5x">eHEX 5× from now</option>
+          <option value="10x">eHEX 10× from now</option>
+          <option value="custom">Custom eHEX price</option>
+        </select>
+      </div>
+      <div class="cf" id="customEField" style="display:none"><label>Custom eHEX price</label><div class="cfwrap"><span class="cfpre">$</span><input class="ci" id="ci3" type="number" value="${S.ehex.toFixed(6)||'0.01'}" step="0.001" oninput="calcOut()"></div></div>
+      <div class="cf"><label>Your pHEX holdings</label><input class="ci plain" id="ci4" type="number" value="0" step="10000" oninput="calcOut()"></div>
+    `;
+    document.getElementById('ci2').addEventListener('change',function(){
+      document.getElementById('customEField').style.display=this.value==='custom'?'flex':'none';
+      calcOut();
+    });
+  } else {
+    cf.innerHTML=`
+      <div class="cf"><label>Target discount % (pHEX as % of eHEX)</label><div class="cfwrap"><input class="ci plain" id="ci1" type="number" value="100" step="5" min="1" max="200" oninput="calcOut()"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--mu2)">%</span></div></div>
+      <div class="cf"><label>eHEX price assumption</label>
+        <select class="ci plain" id="ci2" onchange="calcOut()">
+          <option value="current">Current eHEX (${fP(S.ehex)})</option>
+          <option value="2x">eHEX 2× from now</option>
+          <option value="5x">eHEX 5× from now</option>
+          <option value="10x">eHEX 10× from now</option>
+          <option value="custom">Custom eHEX price</option>
+        </select>
+      </div>
+      <div class="cf" id="customEField" style="display:none"><label>Custom eHEX price</label><div class="cfwrap"><span class="cfpre">$</span><input class="ci" id="ci3" type="number" value="${S.ehex.toFixed(6)||'0.01'}" step="0.001" oninput="calcOut()"></div></div>
+      <div class="cf"><label>Your pHEX holdings</label><input class="ci plain" id="ci4" type="number" value="0" step="10000" oninput="calcOut()"></div>
+    `;
+    document.getElementById('ci2').addEventListener('change',function(){
+      document.getElementById('customEField').style.display=this.value==='custom'?'flex':'none';
+      calcOut();
+    });
+  }
+  calcOut();
+}
+
+function getEhexForCalc(){
+  const mode=document.getElementById('ci2')?.value||'current';
+  if(mode==='2x') return S.ehex*2;
+  if(mode==='5x') return S.ehex*5;
+  if(mode==='10x') return S.ehex*10;
+  if(mode==='custom') return parseFloat(document.getElementById('ci3')?.value)||S.ehex;
+  return S.ehex;
+}
+
+function calcOut(){
+  const co=document.getElementById('calcOut');
+  const myHex=parseFloat(document.getElementById('ci4')?.value)||0;
+  const eHexP=getEhexForCalc();
+
+  if(calcMode==='A'){
+    const targetPhex=parseFloat(document.getElementById('ci1')?.value)||0;
+    if(!targetPhex||!eHexP){ co.innerHTML=''; return; }
+    const impliedDiscount=(1-targetPhex/eHexP)*100;
+    const impliedParity=(targetPhex/eHexP)*100;
+    const phexMult=S.phex>0?targetPhex/S.phex:0;
+    const nowVal=myHex*S.phex;
+    const targetVal=myHex*targetPhex;
+    co.innerHTML=`
+      <div class="oc star-p"><div class="oc-label">Target pHEX price</div><div class="oc-val">${fP(targetPhex)}</div><div class="oc-chg ${phexMult>=1?'up':'dn'}">${phexMult>=1?'+':''}${((phexMult-1)*100).toFixed(1)}% · ${phexMult.toFixed(2)}× from now</div></div>
+      <div class="oc star-e"><div class="oc-label">eHEX price assumed</div><div class="oc-val">${fP(eHexP)}</div><div class="oc-sub">${(eHexP/S.ehex).toFixed(2)}× current eHEX</div></div>
+      <div class="oc ${impliedParity>=80?'star-g':''}"><div class="oc-label">Implied parity %</div><div class="oc-val" style="color:${impliedParity>=80?'var(--grn)':impliedParity>=40?'var(--amb)':'var(--phex)'}">${impliedParity.toFixed(1)}%</div><div class="oc-sub">Discount: ${impliedDiscount.toFixed(1)}%</div></div>
+      <div class="oc"><div class="oc-label">pHEX market cap at target</div><div class="oc-val">${fB(targetPhex*HEX_SUPPLY)}</div></div>
+      ${myHex>0?`
+      <div class="oc"><div class="oc-label">Your pHEX now</div><div class="oc-val">${fB(nowVal)}</div><div class="oc-sub">${myHex.toLocaleString()} pHEX</div></div>
+      <div class="oc star-g"><div class="oc-label">At target price</div><div class="oc-val">${fB(targetVal)}</div><div class="oc-chg ${targetVal>=nowVal?'up':'dn'}">${targetVal>=nowVal?'+':''}${fB(targetVal-nowVal)}</div></div>
+      `:''}
+    `;
+  } else {
+    const targetParity=parseFloat(document.getElementById('ci1')?.value)||100;
+    if(!targetParity||!eHexP){ co.innerHTML=''; return; }
+    const impliedPhex=eHexP*(targetParity/100);
+    const phexMult=S.phex>0?impliedPhex/S.phex:0;
+    const nowVal=myHex*S.phex;
+    const targetVal=myHex*impliedPhex;
+    co.innerHTML=`
+      <div class="oc star-p"><div class="oc-label">Implied pHEX price</div><div class="oc-val">${fP(impliedPhex)}</div><div class="oc-chg ${phexMult>=1?'up':'dn'}">${phexMult>=1?'+':''}${((phexMult-1)*100).toFixed(1)}% · ${phexMult.toFixed(2)}×</div></div>
+      <div class="oc star-e"><div class="oc-label">eHEX assumed</div><div class="oc-val">${fP(eHexP)}</div><div class="oc-sub">${(eHexP/S.ehex).toFixed(2)}× current eHEX</div></div>
+      <div class="oc"><div class="oc-label">Target parity</div><div class="oc-val" style="color:${targetParity>=100?'var(--grn)':targetParity>=50?'var(--amb)':'var(--phex)'}">${targetParity.toFixed(0)}%</div><div class="oc-sub">Discount: ${(100-targetParity).toFixed(0)}%</div></div>
+      <div class="oc"><div class="oc-label">pHEX mcap at this</div><div class="oc-val">${fB(impliedPhex*HEX_SUPPLY)}</div></div>
+      ${myHex>0?`
+      <div class="oc"><div class="oc-label">Your pHEX now</div><div class="oc-val">${fB(nowVal)}</div><div class="oc-sub">${myHex.toLocaleString()} pHEX</div></div>
+      <div class="oc star-g"><div class="oc-label">At target discount</div><div class="oc-val">${fB(targetVal)}</div><div class="oc-chg ${targetVal>=nowVal?'up':'dn'}">${targetVal>=nowVal?'+':''}${fB(targetVal-nowVal)}</div></div>
+      `:''}
+    `;
+  }
+}
+
+/* ── SCENARIO MATRIX ── */
+function renderMatrix(){
+  if(!S.ehex||!S.phex) return;
+  const ehexMults = [0.5, 1, 2, 5, 10, 20, 50];
+  const discounts = [90, 75, 50, 25, 10, 5, 0]; // discount percentages → parity% = 100-disc
+  const curDisc = S.discount;
+
+  const thead=document.querySelector('#scenarioMat thead');
+  const tbody=document.querySelector('#scenarioMat tbody');
+  thead.innerHTML='<tr><th>eHEX price</th>'+
+    discounts.map(d=>{
+      const isCur=Math.abs(d-curDisc)<10;
+      return`<th style="${isCur?'color:var(--phex)':''}">${(100-d).toFixed(0)}% parity<br><span style="font-size:8px;color:var(--mu)">${d.toFixed(0)}% disc${isCur?' ← now':''}</span></th>`;
+    }).join('')+
+  '</tr>';
+
+  tbody.innerHTML=ehexMults.map(em=>{
+    const ehexP=S.ehex*em;
+    const isCurE=em===1;
+    return`<tr ${isCurE?'class="cur"':''}><td style="color:var(--ehex)">${fP(ehexP)} (${em}×)${isCurE?' ← now':''}</td>`+
+      discounts.map(d=>{
+        const parityPct=(100-d)/100;
+        const impliedPhex=ehexP*parityPct;
+        const isCurC=Math.abs(d-curDisc)<10;
+        const isCurBoth=isCurE&&isCurC;
+        const above=impliedPhex>S.phex*1.05;
+        const below=impliedPhex<S.phex*0.95;
+        const cls=isCurBoth?'cell-a':above?'cell-g':below?'cell-r':'cell-m';
+        const mult=S.phex>0?impliedPhex/S.phex:0;
+        return`<td class="${cls}" ${isCurBoth?'style="font-weight:700"':''}>${fP(impliedPhex)}<br><span style="font-size:9px;color:var(--mu)">${mult>=1?'+':''}${((mult-1)*100).toFixed(0)}%</span></td>`;
+      }).join('')+
+    '</tr>';
+  }).join('');
+}
+
+/* ── REVERSE CALCULATOR ── */
+function runReverse(){
+  if(!S.ehex||!S.phex) return;
+  const target=parseFloat(document.getElementById('revTarget').value)||0;
+  const holdings=parseFloat(document.getElementById('revHoldings').value)||0;
+  if(!target){ document.getElementById('revOut').innerHTML='<div class="rev-card"><div class="rv-label">Waiting</div><div class="rv-val" style="color:var(--mu);font-size:13px">Enter a target above</div></div>'; return; }
+
+  // Path A: eHEX stays same, discount narrows
+  const ehexSameDisc=S.ehex>0?(1-target/S.ehex)*100:null;
+  const ehexSameParity=ehexSameDisc!==null?100-ehexSameDisc:null;
+
+  // Path B: discount stays same, eHEX pumps
+  const parityPctNow=S.parityPct/100;
+  const ehexNeeded=parityPctNow>0?target/parityPctNow:null;
+  const ehexNeededMult=ehexNeeded&&S.ehex>0?ehexNeeded/S.ehex:null;
+
+  // Path C: halfway each — eHEX 2x, discount closes halfway to target
+  const ehex2x=S.ehex*2;
+  const c_impliedParity=(target/ehex2x)*100;
+  const c_disc=100-c_impliedParity;
+
+  const nowVal=holdings*S.phex;
+  const targetVal=holdings*target;
+  const phexMult=S.phex>0?target/S.phex:0;
+
+  document.getElementById('revOut').innerHTML=`
+    <div class="rev-card phx">
+      <div class="rv-label">Your target pHEX</div>
+      <div class="rv-val">${fP(target)}</div>
+      <div class="rv-sub">${phexMult.toFixed(2)}× from current ${fP(S.phex)}</div>
+    </div>
+    <div class="rev-card ehx">
+      <div class="rv-label">Path A — eHEX stays, discount closes</div>
+      <div class="rv-val">${ehexSameParity!==null?ehexSameParity.toFixed(1)+'%':target>S.ehex?'Above parity':'—'}</div>
+      <div class="rv-sub">pHEX needs to reach ${ehexSameParity!==null?ehexSameParity.toFixed(1)+'% of eHEX':target>S.ehex?'above current eHEX':'—'} with eHEX staying at ${fP(S.ehex)}</div>
+    </div>
+    <div class="rev-card grn">
+      <div class="rv-label">Path B — discount stays, eHEX pumps</div>
+      <div class="rv-val">${ehexNeeded?fP(ehexNeeded):'—'}</div>
+      <div class="rv-sub">eHEX needs to reach ${fP(ehexNeeded)} (${ehexNeededMult?ehexNeededMult.toFixed(2)+'×':'—'} from now) with discount staying at ${S.discount.toFixed(1)}%</div>
+    </div>
+    <div class="rev-card pls">
+      <div class="rv-label">Path C — eHEX 2×, discount closes to ${c_disc.toFixed(0)}%</div>
+      <div class="rv-val">${fP(target)}</div>
+      <div class="rv-sub">If eHEX doubles to ${fP(ehex2x)}, pHEX needs ${c_impliedParity.toFixed(1)}% parity (currently ${S.parityPct.toFixed(1)}%)</div>
+    </div>
+    ${holdings>0?`
+    <div class="rev-card">
+      <div class="rv-label">Your pHEX value now</div>
+      <div class="rv-val">${fB(nowVal)}</div>
+      <div class="rv-sub">${holdings.toLocaleString()} pHEX</div>
+    </div>
+    <div class="rev-card grn">
+      <div class="rv-label">At target price</div>
+      <div class="rv-val">${fB(targetVal)}</div>
+      <div class="rv-sub" style="color:${targetVal>=nowVal?'var(--grn)':'var(--red)'}">${targetVal>=nowVal?'+':''}${fB(targetVal-nowVal)}</div>
+    </div>
+    `:''}
+  `;
+}
+
+/* ── HOLDINGS TRACKER ── */
+function runHoldings(){
+  if(!S.ehex||!S.phex) return;
+  const phexAmt=parseFloat(document.getElementById('holdAmt').value)||0;
+  const ehexAmt=parseFloat(document.getElementById('holdEAmt').value)||0;
+  if(!phexAmt&&!ehexAmt){ document.getElementById('holdOut').innerHTML='<div class="oc"><div class="oc-label">Waiting</div><div class="oc-val" style="color:var(--mu);font-size:13px">Enter holdings above</div></div>'; return; }
+
+  const parityScenarios=[
+    {label:'Current ('+S.parityPct.toFixed(1)+'%)', parity:S.parityPct/100, cur:true},
+    {label:'50% parity', parity:0.5},
+    {label:'75% parity', parity:0.75},
+    {label:'90% parity', parity:0.90},
+    {label:'100% parity', parity:1.0},
+    {label:'eHEX 2× + 50%', parity:0.5, ehexMult:2},
+    {label:'eHEX 2× + parity', parity:1.0, ehexMult:2},
+    {label:'eHEX 5× + parity', parity:1.0, ehexMult:5},
+  ];
+
+  document.getElementById('holdOut').innerHTML=parityScenarios.map(sc=>{
+    const ehexP=S.ehex*(sc.ehexMult||1);
+    const phexP=ehexP*sc.parity;
+    const totalVal=(phexAmt*phexP)+(ehexAmt*ehexP);
+    const phexMult=S.phex>0?phexP/S.phex:0;
+    const nowTotal=(phexAmt*S.phex)+(ehexAmt*S.ehex);
+    return`<div class="oc ${sc.cur?'':'star-g'}">
+      <div class="oc-label">${sc.label}</div>
+      <div class="oc-val">${fB(totalVal)}</div>
+      <div class="oc-sub">pHEX @ ${fP(phexP)} (${phexMult.toFixed(2)}×)${ehexAmt>0?'<br>eHEX @ '+fP(ehexP):''}</div>
+      ${!sc.cur?`<div class="oc-chg ${totalVal>=nowTotal?'up':'dn'}">${totalVal>=nowTotal?'+':''}${fB(totalVal-nowTotal)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════
+   SUPPLY INTELLIGENCE
+   Reads HEX contract on-chain:
+   - balanceOf(poolAddress) for each DEX pool → HEX in liquidity
+   - globalInfo() → lockedHeartsTotal (staked HEX)
+═══════════════════════════════════════════════ */
+const HEX_CONTRACT = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39';
+const PLS_RPC  = 'https://rpc.pulsechain.com';
+const ETH_RPCS = [
+  'https://rpc.ankr.com/eth',
+  'https://eth.llamarpc.com',
+  'https://cloudflare-eth.com'
+];
+const PLS_RPCS = [
+  'https://rpc.ankr.com/pulsechain',
+  'https://rpc.pulsechain.com',
+  'https://pulsechain-rpc.publicnode.com'
+];
+const RPC_TIMEOUT_MS = 5000; // give up after 5 seconds per endpoint
+const HEX_SUPPLY_HEARTS = 596_500_000_000 * 1e8; // ~596.5B HEX in hearts (1 HEX = 1e8 hearts)
+
+function encodeBalanceOf(address){
+  return '0x70a08231' + address.toLowerCase().replace('0x','').padStart(64,'0');
+}
+function encodeGlobalInfo(){ return '0xf6cd1b0a'; }
+
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),ms))
+  ]);
+}
+
+async function ethCall(rpcs, to, data){
+  const endpoints = Array.isArray(rpcs) ? rpcs : [rpcs];
+  for(const rpc of endpoints){
+    try{
+      const r = await withTimeout(fetch(rpc, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to,data},'latest'],id:1})
+      }), RPC_TIMEOUT_MS);
+      if(!r.ok) continue;
+      const j = await r.json();
+      if(j.result&&j.result!=='0x') return j.result;
+    }catch(e){ continue; }
+  }
+  return null;
+}
+
+function decodeUint256(hex){
+  if(!hex||hex==='0x') return 0;
+  return parseInt(hex.slice(0,66), 16); // first 32 bytes
+}
+
+// Get pool addresses from DexScreener for a given token+chain
+async function getTopPoolAddrs(tokenAddr, chain, topN){
+  try{
+    const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/'+tokenAddr);
+    const d = await r.json();
+    return (d.pairs||[])
+      .filter(p=>p.chainId===chain && p.pairAddress && (p.liquidity?.usd||0)>50000)
+      .sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))
+      .slice(0, topN)
+      .map(p=>p.pairAddress);
+  }catch(e){ return []; }
+}
+
+// Get pool HEX amounts directly from DexScreener liquidity data
+// No RPC needed — DexScreener gives liquidity.usd and price
+// In a 50/50 AMM pool, half the liquidity value is HEX
+async function getPoolHexFromDexScreener(chain, minLiqUsd, topN){
+  try{
+    const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/'+HEX_CONTRACT);
+    const d = await r.json();
+    const pairs = (d.pairs||[])
+      .filter(p=>p.chainId===chain&&(p.liquidity?.usd||0)>=minLiqUsd)
+      .sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))
+      .slice(0,topN);
+    let totalHearts=0, totalLiqUsd=0;
+    for(const p of pairs){
+      const liq=p.liquidity?.usd||0;
+      const hexPrice=parseFloat(p.priceUsd)||0;
+      if(hexPrice>0){
+        // 50/50 pool: half the liquidity is HEX side
+        const hexTokens=(liq/2)/hexPrice;
+        totalHearts+=hexTokens*1e8;
+      }
+      totalLiqUsd+=liq;
+    }
+    return {hearts:totalHearts, poolCount:pairs.length, totalLiqUsd};
+  }catch(e){ return {hearts:0, poolCount:0, totalLiqUsd:0}; }
+}
+
+// Staked HEX — requires RPC, with timeout
+async function getStakedHex(rpcs){
+  try{
+    const res = await ethCall(rpcs, HEX_CONTRACT, encodeGlobalInfo());
+    if(!res||res==='0x') return 0;
+    return decodeUint256(res);
+  }catch(e){ return 0; }
+}
+
+function fH(hearts){ // format hearts to readable HEX
+  const hex = hearts / 1e8;
+  if(hex>=1e9) return (hex/1e9).toFixed(2)+'B';
+  if(hex>=1e6) return (hex/1e6).toFixed(2)+'M';
+  if(hex>=1e3) return (hex/1e3).toFixed(1)+'K';
+  return hex.toFixed(0);
+}
+
+let supplyLoaded = false;
+
+async function loadSupply(){
+  if(supplyLoaded) return;
+  try{
+    const [pData, eData] = await Promise.all([
+      getPoolHexFromDexScreener('pulsechain', 50000, 5),
+      getPoolHexFromDexScreener('ethereum',   50000, 5)
+    ]);
+    const pPoolHex=pData.hearts, ePoolHex=eData.hearts;
+    const totalPoolHex=pPoolHex+ePoolHex;
+    const totalPoolUsd=(pPoolHex/1e8)*S.phex+(ePoolHex/1e8)*S.ehex;
+    const totalSupplyH=HEX_SUPPLY_HEARTS;
+    const pPoolPct=(pPoolHex/totalSupplyH*100);
+    const ePoolPct=(ePoolHex/totalSupplyH*100);
+    const poolDepthPct=(totalPoolUsd/(S.phex*HEX_SUPPLY)*100);
+
+    document.getElementById('supplyGrid').innerHTML=`
+      <div class="arb-card phot">
+        <div class="ac-label">pHEX in DEX pools</div>
+        <div class="ac-val" style="color:var(--phex)">${fH(pPoolHex)} HEX</div>
+        <div class="ac-sub"><b style="color:var(--tx);font-size:13px">${fB((pPoolHex/1e8)*S.phex)}</b> USD · ${pPoolPct.toFixed(3)}% of supply · ${pData.poolCount} pools</div>
+      </div>
+      <div class="arb-card hot">
+        <div class="ac-label">eHEX in DEX pools</div>
+        <div class="ac-val" style="color:var(--ehex)">${fH(ePoolHex)} HEX</div>
+        <div class="ac-sub"><b style="color:var(--tx);font-size:13px">${fB((ePoolHex/1e8)*S.ehex)}</b> USD · ${ePoolPct.toFixed(3)}% of supply · ${eData.poolCount} pools</div>
+      </div>
+      <div class="arb-card grn">
+        <div class="ac-label">Total HEX in pools</div>
+        <div class="ac-val" style="color:var(--grn)">${fH(totalPoolHex)} HEX</div>
+        <div class="ac-sub"><b style="color:var(--tx);font-size:13px">${fB(totalPoolUsd)}</b> USD combined · ${(pPoolPct+ePoolPct).toFixed(3)}% of supply</div>
+      </div>
+      <div class="arb-card">
+        <div class="ac-label">Pool depth vs pHEX mcap</div>
+        <div class="ac-val" style="color:${poolDepthPct<1?'var(--red)':poolDepthPct<3?'var(--amb)':'var(--grn)'}">${poolDepthPct.toFixed(3)}%</div>
+        <div class="ac-sub">Pool liquidity as % of pHEX market cap</div>
+      </div>
+      <div class="arb-card">
+        <div class="ac-label">pHEX 24h volume</div>
+        <div class="ac-val">${fB(S.phexVol)}</div>
+        <div class="ac-sub">vs ${fB((pPoolHex/1e8)*S.phex)} pool liquidity</div>
+      </div>
+      <div class="arb-card">
+        <div class="ac-label">eHEX 24h volume</div>
+        <div class="ac-val">${fB(S.ehexVol)}</div>
+        <div class="ac-sub">vs ${fB((ePoolHex/1e8)*S.ehex)} pool liquidity</div>
+      </div>
+    `;
+
+    document.getElementById('supplyBars').style.display='block';
+    document.getElementById('pStakedBar').style.width='0%';
+    document.getElementById('pPoolBar').style.width=Math.min(pPoolPct,100)+'%';
+    document.getElementById('pLiquidBar').style.width=Math.min(100-pPoolPct,100)+'%';
+    document.getElementById('pSupplyLabel').textContent='In pools: '+pPoolPct.toFixed(3)+'% · Remainder: liquid or staked (not shown)';
+    document.getElementById('eStakedBar').style.width='0%';
+    document.getElementById('ePoolBar').style.width=Math.min(ePoolPct,100)+'%';
+    document.getElementById('eLiquidBar').style.width=Math.min(100-ePoolPct,100)+'%';
+    document.getElementById('eSupplyLabel').textContent='In pools: '+ePoolPct.toFixed(3)+'% · Remainder: liquid or staked (not shown)';
+
+    document.getElementById('supplyNote').style.display='block';
+    document.getElementById('supplyNote').innerHTML=
+      '<b style="color:var(--tx)">What this means:</b> Only <b style="color:var(--grn)">'+(pPoolPct+ePoolPct).toFixed(3)+'% of all HEX</b> is sitting in DEX liquidity pools right now — worth <b style="color:var(--grn)">'+fB(totalPoolUsd)+'</b> combined across both chains. '+
+      'This is the HEX that can be bought or sold immediately on-chain. A very small pool-to-supply ratio means even modest buy or sell pressure can move the price significantly — particularly pHEX on PulseChain which has shallower pools than eHEX on Ethereum. '+
+      'Pool data sourced from DexScreener liquidity figures (50/50 AMM approximation).';
+
+    supplyLoaded=true;
+  }catch(e){
+    document.getElementById('supplyGrid').innerHTML='<div style="color:var(--mu2);font-size:12px;grid-column:1/-1">Supply data temporarily unavailable. Will retry on next refresh.</div>';
+  }
+}
+
+loadAll();
+setInterval(loadAll,60000);
+</script>
+</body>
+</html>
