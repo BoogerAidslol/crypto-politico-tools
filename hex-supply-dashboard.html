@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEX Dual-Chain Supply Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060A;--s1:#0A0C14;--s2:#0F1220;--s3:#14182A;
+  --ehex:#FF8C00;--ehex-b:rgba(255,140,0,.13);--ehex-bb:rgba(255,140,0,.28);
+  --phex:#FF2D78;--phex-b:rgba(255,45,120,.13);--phex-bb:rgba(255,45,120,.28);
+  --grn:#00D4A0;--grn-b:rgba(0,212,160,.12);--grn-bb:rgba(0,212,160,.28);
+  --red:#FF3366;--red-b:rgba(255,51,102,.12);
+  --pls:#7B5CFF;--pls-b:rgba(123,92,255,.12);--pls-bb:rgba(123,92,255,.28);
+  --amb:#FFB800;--amb-b:rgba(255,184,0,.12);
+  --tx:#DDE2F2;--mu:#404866;--mu2:#5A6285;--dim:#14182A;--br:rgba(255,255,255,.06);
+  /* donut colours */
+  --c-oa:#FF3366;--c-staked:#7B5CFF;--c-pools:#00D4A0;--c-bridge:#FFB800;--c-liquid:#5A6285;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 28px;border-bottom:1px solid var(--br);background:rgba(5,6,10,.95);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:10px}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.brand .e{color:var(--ehex)}.brand .d{color:var(--mu)}.brand .p{color:var(--phex)}
+.topright{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--grn-b);border:1px solid var(--grn-bb);color:var(--grn);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:bk 1.4s ease infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.currency-toggle{display:flex;background:var(--s3);border-radius:8px;padding:2px;gap:2px}
+.ct-btn{padding:5px 14px;border-radius:6px;border:none;background:none;color:var(--mu2);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.ct-btn.active{background:var(--phex);color:#fff}
+.rfbtn{background:var(--phex-b);border:1px solid var(--phex-bb);color:var(--phex);padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif}
+.rfbtn:hover{background:rgba(255,45,120,.25)}
+.rfbtn.sp .spin{animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.upd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mu2)}
+
+/* ── LAYOUT ── */
+main{max-width:1360px;margin:0 auto;padding:24px 22px 60px}
+
+/* ── PRICE HERO ── */
+.price-hero{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:22px}
+.ph-card{background:var(--s1);border:1px solid var(--br);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden}
+.ph-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ph-card.ehex::before{background:var(--ehex);box-shadow:0 0 12px var(--ehex)}
+.ph-card.phex::before{background:var(--phex);box-shadow:0 0 12px var(--phex)}
+.ph-card.aud::before{background:var(--grn);box-shadow:0 0 12px var(--grn)}
+.ph-card.ratio::before{background:linear-gradient(90deg,var(--ehex),var(--phex))}
+.ph-eye{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--mu);text-transform:uppercase;margin-bottom:7px}
+.ph-val{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;letter-spacing:-1px;line-height:1}
+.ph-chg{display:inline-flex;padding:3px 9px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-top:8px}
+.ph-chg.up{background:var(--grn-b);color:var(--grn)}.ph-chg.dn{background:var(--red-b);color:var(--red)}.ph-chg.fl{background:var(--dim);color:var(--mu2)}
+.ph-sub{font-size:11px;color:var(--mu2);margin-top:6px}
+
+/* ── SECTION ── */
+.sec{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:22px;margin-bottom:18px}
+.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--br)}
+.sec-sub{font-size:12px;color:var(--mu2);margin-bottom:18px;line-height:1.7}
+
+/* ── DUAL CHAIN GRID ── */
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.chain-card{background:var(--s2);border-radius:14px;padding:20px;border:1px solid var(--br)}
+.chain-title{display:flex;align-items:center;gap:8px;margin-bottom:18px}
+.chain-dot{width:10px;height:10px;border-radius:50%}
+.chain-dot.e{background:var(--ehex);box-shadow:0 0 8px var(--ehex)}
+.chain-dot.p{background:var(--phex);box-shadow:0 0 8px var(--phex)}
+.chain-name{font-size:14px;font-weight:700}
+
+/* ── DONUT ── */
+.donut-wrap{display:flex;gap:20px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.donut-canvas-wrap{position:relative;flex-shrink:0}
+.donut-canvas-wrap canvas{display:block}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.dc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.dc-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--tx);margin-top:2px}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1}
+.dl-item{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dl-left{display:flex;align-items:center;gap:7px}
+.dl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dl-name{font-size:11px;color:var(--mu2)}
+.dl-right{text-align:right}
+.dl-pct{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--tx)}
+.dl-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mu2)}
+
+/* ── METRICS GRID ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px}
+.metric{background:var(--dim);border-radius:9px;padding:12px}
+.m-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:5px}
+.m-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--tx)}
+.m-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+
+/* ── COMBINED ── */
+.combined-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:14px}
+.comb-card{background:var(--s2);border-radius:12px;padding:14px 16px;border:1px solid var(--br)}
+.cc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.cc-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--tx)}
+.cc-sub{font-size:10px;color:var(--mu2);margin-top:4px}
+.cc-bar{height:4px;background:var(--dim);border-radius:4px;margin-top:8px;overflow:hidden}
+.cc-fill{height:100%;border-radius:4px;transition:width .8s ease}
+
+/* ── TSHARE SECTION ── */
+.tshare-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.ts-card{background:var(--s2);border-radius:14px;padding:18px;border:1px solid var(--br)}
+.ts-chain{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--mu);text-transform:uppercase;margin-bottom:12px}
+.ts-metrics{display:flex;flex-direction:column;gap:10px}
+.ts-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--br)}
+.ts-row:last-child{border-bottom:none}
+.ts-key{font-size:12px;color:var(--mu2)}
+.ts-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--tx);text-align:right}
+
+/* ── STAKE CALCULATOR ── */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.cf{display:flex;flex-direction:column;gap:5px}
+.cf label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.cfwrap{position:relative}
+.cfpre{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--mu2);pointer-events:none}
+.ci{width:100%;background:var(--s3);border:1px solid var(--br);border-radius:8px;padding:9px 12px 9px 26px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--tx);outline:none;transition:border-color .15s}
+.ci:focus{border-color:var(--phex)}
+.ci.plain{padding-left:12px}
+.calc-chain-toggle{display:flex;background:var(--s3);border-radius:8px;padding:2px;margin-bottom:14px;width:fit-content;gap:2px}
+.cct{padding:6px 16px;border-radius:7px;border:none;background:none;color:var(--mu2);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.cct.active{background:var(--phex);color:#fff}
+.calc-out{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.co{background:var(--s2);border-radius:10px;padding:12px 14px}
+.co-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:5px}
+.co-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--tx)}
+.co-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+
+/* ── KNOWN WALLETS ── */
+.wallets-table{width:100%;border-collapse:collapse;font-size:12px}
+.wallets-table th{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--br);text-align:left}
+.wallets-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:12px}
+.wallets-table tr:last-child td{border-bottom:none}
+.wallets-table tr:hover td{background:var(--s2)}
+.w-tag{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.5px}
+.w-tag.oa{background:var(--red-b);color:var(--red)}
+.w-tag.bridge{background:var(--amb-b);color:var(--amb)}
+.w-tag.whale{background:var(--pls-b);color:var(--pls)}
+
+/* ── SKELETON ── */
+.sk{background:var(--dim);border-radius:4px;animation:sh 1.6s infinite;display:inline-block}
+@keyframes sh{0%,100%{opacity:.4}50%{opacity:.7}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.dual{grid-template-columns:1fr}.tshare-grid{grid-template-columns:1fr}.price-hero{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){main{padding:16px 14px 40px}.topbar{padding:12px 16px}.price-hero{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="e">eHEX</span><span class="d"> · </span><span class="p">pHEX</span> Supply Dashboard</div>
+  <div class="topright">
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <div class="currency-toggle">
+      <button class="ct-btn active" id="btnUsd" onclick="setCurrency('USD')">USD</button>
+      <button class="ct-btn" id="btnAud" onclick="setCurrency('AUD')">AUD</button>
+    </div>
+    <span class="upd" id="updEl">Connecting…</span>
+    <button class="rfbtn" id="rfBtn" onclick="loadAll()"><span class="spin">↻</span> Refresh</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ── PRICE HERO ── -->
+<div class="price-hero">
+  <div class="ph-card ehex">
+    <div class="ph-eye">eHEX · Ethereum</div>
+    <div class="ph-val" id="ehexPx"><span class="sk" style="width:120px;height:28px;border-radius:5px"></span></div>
+    <div class="ph-chg fl" id="ehexChg">—</div>
+    <div class="ph-sub" id="ehexSub">Loading…</div>
+  </div>
+  <div class="ph-card phex">
+    <div class="ph-eye">pHEX · PulseChain</div>
+    <div class="ph-val" id="phexPx"><span class="sk" style="width:120px;height:28px;border-radius:5px"></span></div>
+    <div class="ph-chg fl" id="phexChg">—</div>
+    <div class="ph-sub" id="phexSub">Loading…</div>
+  </div>
+  <div class="ph-card ratio">
+    <div class="ph-eye">pHEX / eHEX parity</div>
+    <div class="ph-val" id="parityPx"><span class="sk" style="width:100px;height:28px;border-radius:5px"></span></div>
+    <div class="ph-chg fl" id="parityChg">—</div>
+    <div class="ph-sub" id="paritySub">Loading…</div>
+  </div>
+  <div class="ph-card aud">
+    <div class="ph-eye" id="audEyeLabel">AUD / USD rate</div>
+    <div class="ph-val" id="audRate"><span class="sk" style="width:100px;height:28px;border-radius:5px"></span></div>
+    <div class="ph-chg fl" id="audChg">—</div>
+    <div class="ph-sub" id="audSub">Loading…</div>
+  </div>
+</div>
+
+<!-- ── DONUT CHARTS ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Supply Breakdown — Where Is All the HEX?</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Every HEX token accounted for — what's locked, what's tradeable, what's held by known wallets, and what's genuinely available to real users. The real float is far smaller than the headline supply number suggests.</div>
+  <div class="dual">
+    <div class="chain-card">
+      <div class="chain-title"><div class="chain-dot e"></div><div class="chain-name">eHEX — Ethereum</div></div>
+      <div class="donut-wrap">
+        <div class="donut-canvas-wrap">
+          <canvas id="eDonut" width="160" height="160"></canvas>
+          <div class="donut-center"><div class="dc-label">Total</div><div class="dc-val" id="eTotalLabel">—</div></div>
+        </div>
+        <div class="donut-legend" id="eLegend"></div>
+      </div>
+      <div class="metrics" id="eMetrics"></div>
+    </div>
+    <div class="chain-card">
+      <div class="chain-title"><div class="chain-dot p"></div><div class="chain-name">pHEX — PulseChain</div></div>
+      <div class="donut-wrap">
+        <div class="donut-canvas-wrap">
+          <canvas id="pDonut" width="160" height="160"></canvas>
+          <div class="donut-center"><div class="dc-label">Total</div><div class="dc-val" id="pTotalLabel">—</div></div>
+        </div>
+        <div class="donut-legend" id="pLegend"></div>
+      </div>
+      <div class="metrics" id="pMetrics"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMBINED VIEW ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Combined View — Both Chains</div><div class="sec-line"></div></div>
+  <div class="combined-grid" id="combinedGrid">
+    <div class="comb-card"><div class="cc-label">Loading</div><div class="sk" style="width:100px;height:22px;margin:4px 0"></div></div>
+  </div>
+</div>
+
+<!-- ── COMBINED MARKET CAP ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Total HEX Market Cap — All Known Supply</div><div class="sec-line"></div></div>
+  <div class="combined-grid" id="mcapGrid">
+    <div class="comb-card"><div class="cc-label">Loading</div><div class="sk" style="width:100px;height:22px;margin:4px 0"></div></div>
+  </div>
+</div>
+
+<!-- ── KNOWN WALLETS ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Known Large Wallets</div><div class="sec-line"></div></div>
+  <div class="sec-sub">The wallets that have never sold — or never moved. Understanding where concentrated supply sits tells you the real float. OA = Origin Address (Richard Heart ecosystem treasury). Bridge = cross-chain bridge contract.</div>
+  <div style="overflow-x:auto">
+    <table class="wallets-table">
+      <thead>
+        <tr>
+          <th>Wallet</th>
+          <th>Chain</th>
+          <th>HEX held</th>
+          <th>USD value</th>
+          <th>% of supply</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="walletsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── T-SHARE SECTION ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">T-Share Live Metrics</div><div class="sec-line"></div></div>
+  <div class="sec-sub">T-Shares are the unit of staking power. The Share Rate tells you how many HEX it costs to get one T-Share — it rises over time by design, making early staking more efficient. Data via on-chain RPC where available.</div>
+  <div class="tshare-grid" id="tshareGrid">
+    <div class="ts-card"><div class="ts-chain" style="color:var(--ehex)">eHEX · Ethereum</div><div style="color:var(--mu);font-size:12px">Loading on-chain data…</div></div>
+    <div class="ts-card"><div class="ts-chain" style="color:var(--phex)">pHEX · PulseChain</div><div style="color:var(--mu);font-size:12px">Loading on-chain data…</div></div>
+  </div>
+</div>
+
+<!-- ── STAKE CALCULATOR ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Stake Calculator</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Enter how much HEX you want to stake and for how long. The calculator shows your estimated T-Shares and projected daily yield at current rates — helping you compare staking versus holding.</div>
+  <div class="calc-chain-toggle">
+    <button class="cct active" id="ccte" onclick="setCalcChain('e')">eHEX</button>
+    <button class="cct" id="cctp" onclick="setCalcChain('p')">pHEX</button>
+  </div>
+  <div class="calc-grid">
+    <div class="cf"><label>HEX amount to stake</label><input class="ci plain" id="cHex" type="number" value="100000" step="10000" oninput="runCalc()"></div>
+    <div class="cf"><label>Stake duration (days)</label><input class="ci plain" id="cDays" type="number" value="365" min="1" max="5555" step="1" oninput="runCalc()"></div>
+    <div class="cf"><label>Current HEX price (auto)</label><div class="cfwrap"><span class="cfpre">$</span><input class="ci" id="cPrice" type="number" step="0.000001" oninput="runCalc()"></div></div>
+  </div>
+  <div class="calc-out" id="calcOut">
+    <div class="co"><div class="co-label">Waiting</div><div class="co-val" style="color:var(--mu);font-size:13px">Enter details above</div></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+'use strict';
+
+/* ── CONSTANTS ── */
+const HEX_CONTRACT = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39';
+const HEX_SUPPLY   = 596_500_000_000;
+const HEARTS       = 1e8;
+
+/* Share rate bonus: longer stakes get bonus T-shares.
+   HEX uses a "longer pays better" bonus of up to 3× for 5555-day stakes */
+const LPB_MAX_DAYS = 5555;
+const LPB_MAX_BONUS = 3; // 3× bonus at max duration
+
+/* Known wallets — hex balances are fetched live via balanceOf() */
+const KNOWN_WALLETS = [
+  { name:'Origin Address (OA)', addr:'0x9A6a414D6F3497c05E3b1De90520765fA1E07c03', chain:'ethereum', hex:0, tag:'oa', note:'HEX ecosystem treasury — never sold' },
+  { name:'OA (PulseChain)', addr:'0x9A6a414D6F3497c05E3b1De90520765fA1E07c03', chain:'pulsechain', hex:0, tag:'oa', note:'OA allocation on PulseChain' },
+  { name:'Omnibridge Proxy', addr:'0x1715a3E4A142d8b698131108995174F37aEBA10D', chain:'pulsechain', hex:0, tag:'bridge', note:'Cross-chain bridge contract' },
+  { name:'"God Whale"', addr:'0x2b1e78aA8C7459d42865627f7C6BE21f3a2d2Da2', chain:'pulsechain', hex:0, tag:'whale', note:'Unknown large holder' },
+  { name:'Unknown Whale #4', addr:'0x2BDE3b9C0129be4689E245Ba689b9b0Ae4AC666D', chain:'pulsechain', hex:0, tag:'whale', note:'Unknown' },
+  { name:'Unknown Whale #5', addr:'0x3E7bC6503CBb1cF4490414Fd899F85348D7CD58E', chain:'pulsechain', hex:0, tag:'whale', note:'Unknown' },
+];
+
+let S = {
+  ePrice:0, pPrice:0, audRate:1, currency:'USD',
+  eChg24:0, pChg24:0,
+  ePoolHex:0, pPoolHex:0,
+  ePoolUsd:0, pPoolUsd:0,
+  eShareRate:0, pShareRate:0,
+  eTotalShares:0, pTotalShares:0,
+  eStaked:0, pStaked:0,
+  eTotalSupply:HEX_SUPPLY, pTotalSupply:HEX_SUPPLY, // updated live when RPC works
+  walletBalances:{},        // keyed by 'chain:addr' — live balanceOf() results
+  calcChain:'e'
+};
+
+/* ── HELPERS ── */
+const fX = (n, decimals) => {
+  if(!n||isNaN(n)) return '—';
+  const v = n * (S.currency==='AUD' ? S.audRate : 1);
+  const sym = S.currency==='AUD' ? 'A$' : '$';
+  if(v>=1e12) return sym+(v/1e12).toFixed(2)+'T';
+  if(v>=1e9)  return sym+(v/1e9).toFixed(2)+'B';
+  if(v>=1e6)  return sym+(v/1e6).toFixed(2)+'M';
+  if(v>=1e3)  return sym+(v/1e3).toFixed(1)+'K';
+  return sym+v.toFixed(decimals||2);
+};
+const fP = n => {
+  if(!n||isNaN(n)) return '—';
+  const v = n * (S.currency==='AUD' ? S.audRate : 1);
+  const sym = S.currency==='AUD' ? 'A$' : '$';
+  if(v>=1) return sym+v.toFixed(4);
+  if(v>=0.01) return sym+v.toFixed(5);
+  if(v>=0.001) return sym+v.toFixed(6);
+  if(v>=0.0001) return sym+v.toFixed(7);
+  return sym+v.toFixed(8);
+};
+const fN = n => { if(!n||isNaN(n)) return '—'; if(n>=1e12) return (n/1e12).toFixed(2)+'T'; if(n>=1e9) return (n/1e9).toFixed(2)+'B'; if(n>=1e6) return (n/1e6).toFixed(2)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return n.toFixed(0); };
+const f2 = n => (n>=0?'+':'')+n.toFixed(2)+'%';
+const fc = n => n>0.3?'up':n<-0.3?'dn':'fl';
+
+/* ── CURRENCY TOGGLE ── */
+function setCurrency(c){
+  S.currency=c;
+  document.getElementById('btnUsd').className='ct-btn'+(c==='USD'?' active':'');
+  document.getElementById('btnAud').className='ct-btn'+(c==='AUD'?' active':'');
+  renderAll();
+}
+
+/* ── DONUT CHART ── */
+function drawDonut(canvasId, slices){
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=W/2-8, r=R*0.58;
+  ctx.clearRect(0,0,W,H);
+  // bg circle
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.fillStyle='#14182A'; ctx.fill();
+
+  let start=-Math.PI/2;
+  slices.forEach(s=>{
+    if(!s.pct||s.pct<=0) return;
+    const angle = (s.pct/100)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,start,start+angle);
+    ctx.closePath();
+    ctx.fillStyle=s.color; ctx.fill();
+    start+=angle;
+  });
+
+  // inner circle (donut hole)
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle='#0F1220'; ctx.fill();
+}
+
+/* ── RPC ── */
+const ETH_RPCS=[
+  'https://cloudflare-eth.com',
+  'https://rpc.ankr.com/eth',
+  'https://eth.llamarpc.com',
+  'https://ethereum-rpc.publicnode.com',
+  'https://1rpc.io/eth'
+];
+const PLS_RPCS=[
+  'https://rpc.ankr.com/pulsechain',
+  'https://rpc.pulsechain.com',
+  'https://pulsechain-rpc.publicnode.com',
+  'https://rpc-pulsechain.g4mm4.io'
+];
+const TIMEOUT=10000; // 10s — Ethereum nodes need more time
+
+/* Fallback values when RPC unavailable */
+const FALLBACK = {
+  eOA:      3_900_000_000,
+  pOA:      563_000_000_000,
+  eBridge:  0,
+  pBridge:  10_500_000_000,
+  eSupply:  596_500_000_000,
+  pSupply:  596_500_000_000
+};
+
+function withTimeout(p,ms){ return Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))]); }
+
+async function rpcCall(rpcs,to,data){
+  for(const rpc of rpcs){
+    try{
+      const r=await withTimeout(fetch(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',method:'eth_call',params:[{to,data},'latest'],id:1})}),TIMEOUT);
+      if(!r.ok) continue;
+      const j=await r.json();
+      if(j.result&&j.result!=='0x') return j.result;
+    }catch(e){ continue; }
+  }
+  return null;
+}
+
+function hexToU256(hex,slot){ // BigInt-safe ABI slot decoder (32 bytes each)
+  if(!hex||hex==='0x') return 0;
+  try{
+    const clean=hex.slice(2);
+    const start=slot*64, chunk=clean.slice(start,start+64);
+    if(!chunk||chunk.length===0) return 0;
+    return Number(BigInt('0x'+chunk));
+  }catch(e){ return 0; }
+}
+
+function hexToU256Raw(hex){ // decode first 32-byte slot as BigInt-safe number
+  if(!hex||hex==='0x') return 0;
+  try{
+    const clean=hex.slice(2).slice(0,64);
+    return Number(BigInt('0x'+clean));
+  }catch(e){ return 0; }
+}
+
+async function getGlobalInfo(rpcs){
+  try{
+    const res=await rpcCall(rpcs,HEX_CONTRACT,'0xf6cd1b0a');
+    if(!res) return null;
+    // All slots BigInt-safe decoded
+    const lockedHeartsTotal = hexToU256(res,0);
+    const shareRate         = hexToU256(res,2);
+    const stakeSharesTotal  = hexToU256(res,5);
+    return { lockedHeartsTotal, shareRate, stakeSharesTotal };
+  }catch(e){ return null; }
+}
+
+/* ── LIVE WALLET BALANCE ── */
+function encodeBalanceOf(addr){
+  return '0x70a08231' + addr.toLowerCase().replace('0x','').padStart(64,'0');
+}
+
+async function getBalanceOf(addr, rpcs){
+  try{
+    const res = await rpcCall(rpcs, HEX_CONTRACT, encodeBalanceOf(addr));
+    if(!res||res==='0x') return 0;
+    return hexToU256Raw(res) / HEARTS;
+  }catch(e){ return 0; }
+}
+
+/* Live total supply from HEX contract */
+async function getTotalSupply(rpcs){
+  try{
+    const res = await rpcCall(rpcs, HEX_CONTRACT, '0x18160ddd');
+    if(!res||res==='0x') return 0;
+    return hexToU256Raw(res) / HEARTS;
+  }catch(e){ return 0; }
+}
+
+/* Fetch all known wallet balances in parallel */
+async function fetchWalletBalances(){
+  const tasks = KNOWN_WALLETS.map(w => {
+    const rpcs = w.chain === 'ethereum' ? ETH_RPCS : PLS_RPCS;
+    return getBalanceOf(w.addr, rpcs).then(bal => {
+      const key = w.chain + ':' + w.addr.toLowerCase();
+      S.walletBalances[key] = bal;
+      w.hex = bal; // update live
+    });
+  });
+  await Promise.allSettled(tasks);
+}
+
+/* ── DEXSCREENER POOL HEX ── */
+async function getPoolHex(chain, minLiq){
+  try{
+    const r=await fetch('https://api.dexscreener.com/latest/dex/tokens/'+HEX_CONTRACT);
+    const d=await r.json();
+    const pairs=(d.pairs||[]).filter(p=>p.chainId===chain&&(p.liquidity?.usd||0)>=minLiq)
+      .sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0)).slice(0,5);
+    let hexHearts=0;
+    for(const p of pairs){
+      const liq=p.liquidity?.usd||0;
+      const price=parseFloat(p.priceUsd)||0;
+      if(price>0) hexHearts+=(liq/2/price)*HEARTS;
+    }
+    return hexHearts;
+  }catch(e){ return 0; }
+}
+
+/* ── AUD RATE ── */
+async function getAudRate(){
+  try{
+    const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const d=await r.json();
+    return d.rates?.AUD||1.55;
+  }catch(e){ return 1.55; }
+}
+
+/* ── DEXSCREENER PRICES ── */
+async function dsToken(chain){
+  const r=await fetch('https://api.dexscreener.com/latest/dex/tokens/'+HEX_CONTRACT);
+  const d=await r.json();
+  return (d.pairs||[]).filter(p=>p.chainId===chain).sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0]||null;
+}
+
+/* ── LOAD ALL ── */
+async function loadAll(){
+  const btn=document.getElementById('rfBtn'); btn.classList.add('sp');
+  document.getElementById('updEl').textContent='Updating…';
+
+  try{
+    const [ep, pp, audRate, ePoolH, pPoolH, eGI, pGI, eTotSup, pTotSup] = await Promise.all([
+      dsToken('ethereum'),
+      dsToken('pulsechain'),
+      getAudRate(),
+      getPoolHex('ethereum', 50000),
+      getPoolHex('pulsechain', 50000),
+      getGlobalInfo(ETH_RPCS),
+      getGlobalInfo(PLS_RPCS),
+      getTotalSupply(ETH_RPCS),
+      getTotalSupply(PLS_RPCS)
+    ]);
+
+    if(ep){ S.ePrice=parseFloat(ep.priceUsd)||0; S.eChg24=parseFloat(ep.priceChange?.h24||0); }
+    if(pp){ S.pPrice=parseFloat(pp.priceUsd)||0; S.pChg24=parseFloat(pp.priceChange?.h24||0); }
+    S.audRate = audRate;
+    S.ePoolHex = ePoolH/HEARTS;
+    S.pPoolHex = pPoolH/HEARTS;
+    S.ePoolUsd = S.ePoolHex * S.ePrice;
+    S.pPoolUsd = S.pPoolHex * S.pPrice;
+    S.eTotalSupply = eTotSup>0 ? eTotSup : FALLBACK.eSupply;
+    S.pTotalSupply = pTotSup>0 ? pTotSup : FALLBACK.pSupply;
+
+    // globalInfo results
+    if(eGI){
+      S.eStaked = eGI.lockedHeartsTotal/HEARTS;
+      S.eShareRate = eGI.shareRate/10;
+      S.eTotalShares = eGI.stakeSharesTotal/1e12;
+    }
+    if(pGI){
+      S.pStaked = pGI.lockedHeartsTotal/HEARTS;
+      S.pShareRate = pGI.shareRate/10;
+      S.pTotalShares = pGI.stakeSharesTotal/1e12;
+    }
+
+    // Fetch all known wallet balances live
+    await fetchWalletBalances();
+
+    // prefill calc price
+    const calcChainPrice = S.calcChain==='e' ? S.ePrice : S.pPrice;
+    if(calcChainPrice>0) document.getElementById('cPrice').value=calcChainPrice;
+
+    renderAll();
+    document.getElementById('updEl').textContent='Updated '+new Date().toLocaleTimeString();
+  }catch(e){
+    document.getElementById('updEl').textContent='Error — retrying…';
+  }
+  btn.classList.remove('sp');
+}
+
+/* ── RENDER ALL ── */
+function renderAll(){
+  renderPrices();
+  renderDonuts();
+  renderCombined();
+  renderMcap();
+  renderWallets();
+  renderTshares();
+  runCalc();
+}
+
+/* ── PRICES ── */
+function renderPrices(){
+  const sym = S.currency==='AUD'?'A$':'$';
+  document.getElementById('ehexPx').textContent = fP(S.ePrice);
+  const ec=document.getElementById('ehexChg'); ec.textContent=(S.eChg24>=0?'▲ ':'▼ ')+Math.abs(S.eChg24).toFixed(2)+'% 24h'; ec.className='ph-chg '+fc(S.eChg24);
+  document.getElementById('ehexSub').textContent='Mcap: '+fX(S.ePrice*HEX_SUPPLY,0);
+
+  document.getElementById('phexPx').textContent = fP(S.pPrice);
+  const pc=document.getElementById('phexChg'); pc.textContent=(S.pChg24>=0?'▲ ':'▼ ')+Math.abs(S.pChg24).toFixed(2)+'% 24h'; pc.className='ph-chg '+fc(S.pChg24);
+  document.getElementById('phexSub').textContent='Mcap: '+fX(S.pPrice*HEX_SUPPLY,0);
+
+  const parity = S.ePrice>0&&S.pPrice>0 ? (S.pPrice/S.ePrice*100) : 0;
+  const parDrift = S.pChg24 - S.eChg24;
+  document.getElementById('parityPx').textContent = parity.toFixed(2)+'%';
+  const parEl=document.getElementById('parityChg'); parEl.textContent=(parDrift>=0?'▲ Narrowing ':'▼ Widening ')+Math.abs(parDrift).toFixed(2)+'%'; parEl.className='ph-chg '+fc(parDrift);
+  document.getElementById('paritySub').textContent='pHEX is '+(100-parity).toFixed(1)+'% cheaper than eHEX';
+
+  const audDisp = S.audRate.toFixed(4);
+  document.getElementById('audRate').textContent = S.currency==='AUD' ? '1 USD = A$'+audDisp : '1 USD = A$'+audDisp;
+  document.getElementById('audChg').textContent=''; document.getElementById('audChg').className='ph-chg fl';
+  document.getElementById('audSub').textContent=S.currency==='AUD'?'All values showing in Australian dollars':'Toggle to AUD for Australian dollar values';
+  document.getElementById('audEyeLabel').textContent='AUD / USD rate';
+}
+
+/* ── DONUTS ── */
+function getWalletBal(chain, addr){
+  const key = chain+':'+addr.toLowerCase();
+  const live = S.walletBalances[key];
+  if(live && live > 0) return live;
+  // Fallback to known values when RPC unavailable
+  const OA = '0x9a6a414d6f3497c05e3b1de90520765fa1e07c03';
+  const BRIDGE = '0x1715a3e4a142d8b698131108995174f37aeba10d';
+  if(addr.toLowerCase()===OA){
+    return chain==='ethereum' ? FALLBACK.eOA : FALLBACK.pOA;
+  }
+  if(addr.toLowerCase()===BRIDGE && chain==='pulsechain'){
+    return FALLBACK.pBridge;
+  }
+  return 0;
+}
+
+function getWalletBalIsLive(chain, addr){
+  const key = chain+':'+addr.toLowerCase();
+  const live = S.walletBalances[key];
+  return live && live > 0;
+}
+
+function buildSlices(chain){
+  const isE = chain==='e';
+  const price = isE ? S.ePrice : S.pPrice;
+  const total = isE ? S.eTotalSupply : S.pTotalSupply;
+  // Live OA balance
+  const oa = getWalletBal(
+    isE ? 'ethereum' : 'pulsechain',
+    '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03'
+  );
+  // Live bridge balance (PulseChain only)
+  const bridge = isE ? 0 : getWalletBal('pulsechain', '0x1715a3E4A142d8b698131108995174F37aEBA10D');
+  const staked = isE ? S.eStaked : S.pStaked;
+  const pools = isE ? S.ePoolHex : S.pPoolHex;
+
+  const oaPct   = (oa/total*100);
+  const bridgePct = (bridge/total*100);
+  const stakedPct = staked>0 ? (staked/total*100) : 0;
+  const poolsPct  = (pools/total*100);
+  const liquidPct = Math.max(0, 100-oaPct-bridgePct-stakedPct-poolsPct);
+
+  return [
+    { label:'Origin Address (OA)', hex:oa,     pct:oaPct,    color:'var(--c-oa)',     usd:oa*price },
+    { label:'Staked',              hex:staked,  pct:stakedPct,color:'var(--c-staked)', usd:staked*price, note:staked>0?null:'RPC unavailable' },
+    { label:'In DEX pools',        hex:pools,   pct:poolsPct, color:'var(--c-pools)',  usd:pools*price },
+    { label:'Bridge contract',     hex:bridge,  pct:bridgePct,color:'var(--c-bridge)', usd:bridge*price },
+    { label:'Other liquid',        hex:liquidPct/100*total, pct:liquidPct, color:'var(--c-liquid)', usd:(liquidPct/100*total)*price },
+  ].filter(s=>s.pct>0);
+}
+
+function renderDonuts(){
+  ['e','p'].forEach(chain=>{
+    const isE=chain==='e';
+    const slices=buildSlices(chain);
+    drawDonut(chain+'Donut', slices);
+
+    const price = isE ? S.ePrice : S.pPrice;
+    const chainTotal = isE ? S.eTotalSupply : S.pTotalSupply;
+    document.getElementById(chain+'TotalLabel').textContent = fN(chainTotal);
+
+    // legend
+    document.getElementById(chain+'Legend').innerHTML = slices.map(s=>`
+      <div class="dl-item">
+        <div class="dl-left"><div class="dl-dot" style="background:${s.color}"></div><div class="dl-name">${s.label}${s.note?` <span style="color:var(--mu);font-size:9px">(${s.note})</span>`:''}</div></div>
+        <div class="dl-right"><div class="dl-pct">${s.pct.toFixed(2)}%</div><div class="dl-val">${fN(s.hex)} HEX · ${fX(s.usd,0)}</div></div>
+      </div>
+    `).join('');
+
+    // metrics
+    const staked = isE ? S.eStaked : S.pStaked;
+    const total = isE ? S.eTotalSupply : S.pTotalSupply;
+    const oa = getWalletBal(isE?'ethereum':'pulsechain','0x9A6a414D6F3497c05E3b1De90520765fA1E07c03');
+    const pools = isE ? S.ePoolHex : S.pPoolHex;
+    const userSupply = total - oa;
+
+    document.getElementById(chain+'Metrics').innerHTML=`
+      <div class="metric"><div class="m-label">Total supply</div><div class="m-val">${fN(total)}</div><div class="m-sub">${total>0?'Live from contract':'596.5B est.'}</div></div>
+      <div class="metric"><div class="m-label">Excl. OA</div><div class="m-val">${fN(userSupply)}</div><div class="m-sub">Real user supply</div></div>
+      <div class="metric"><div class="m-label">In DEX pools</div><div class="m-val" style="color:var(--grn)">${fN(pools)}</div><div class="m-sub">${fX(pools*price,0)}</div></div>
+      <div class="metric"><div class="m-label">Staked</div><div class="m-val" style="color:var(--pls)">${staked>0?fN(staked):'—'}</div><div class="m-sub">${staked>0?fX(staked*price,0):'RPC unavailable'}</div></div>
+    `;
+  });
+}
+
+/* ── COMBINED MARKET CAP ── */
+function renderMcap(){
+  const eSupply  = S.eTotalSupply || FALLBACK.eSupply;
+  const pSupply  = S.pTotalSupply || FALLBACK.pSupply;
+  const eMcap    = S.ePrice * eSupply;
+  const pMcap    = S.pPrice * pSupply;
+
+  // Known OA holdings (live or fallback)
+  const eOA     = getWalletBal('ethereum',   '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03');
+  const pOA     = getWalletBal('pulsechain', '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03');
+  const pBridge = getWalletBal('pulsechain', '0x1715a3E4A142d8b698131108995174F37aEBA10D');
+
+  // Value of known concentrated wallets
+  const oaValueE  = eOA  * S.ePrice;
+  const oaValueP  = pOA  * S.pPrice;
+  const bridgeVal = pBridge * S.pPrice;
+  const stakedValE = S.eStaked * S.ePrice;
+  const stakedValP = S.pStaked * S.pPrice;
+
+  // Real user float = total supply minus OA minus bridge minus staked
+  const eFloat = Math.max(0, eSupply - eOA - S.eStaked) * S.ePrice;
+  const pFloat = Math.max(0, pSupply - pOA - pBridge - S.pStaked) * S.pPrice;
+
+  // Combined totals — eHEX and pHEX are the same token on different chains
+  // so we note this clearly rather than summing as if they're independent
+  const totalStakedVal = stakedValE + stakedValP;
+  const totalOaVal = oaValueE + oaValueP;
+  const totalPoolVal = S.ePoolUsd + S.pPoolUsd;
+
+  document.getElementById('mcapGrid').innerHTML=`
+    <div class="comb-card">
+      <div class="cc-label">eHEX market cap</div>
+      <div class="cc-val">${fX(eMcap,0)}</div>
+      <div class="cc-sub">${fP(S.ePrice)} × ${fN(eSupply)} supply</div>
+      <div class="cc-bar"><div class="cc-fill" style="width:100%;background:var(--ehex)"></div></div>
+    </div>
+    <div class="comb-card">
+      <div class="cc-label">pHEX market cap</div>
+      <div class="cc-val">${fX(pMcap,0)}</div>
+      <div class="cc-sub">${fP(S.pPrice)} × ${fN(pSupply)} supply</div>
+      <div class="cc-bar"><div class="cc-fill" style="width:${eMcap>0?(pMcap/eMcap*100).toFixed(0):50}%;background:var(--phex)"></div></div>
+    </div>
+    <div class="comb-card" style="border-color:var(--pls-bb)">
+      <div class="cc-label">OA holdings — total value</div>
+      <div class="cc-val" style="color:var(--red)">${fX(totalOaVal,0)}</div>
+      <div class="cc-sub">eOA: ${fX(oaValueE,0)} · pOA: ${fX(oaValueP,0)}</div>
+      <div class="cc-sub" style="margin-top:3px">Never sold — not part of real float</div>
+    </div>
+    <div class="comb-card">
+      <div class="cc-label">Total staked value</div>
+      <div class="cc-val" style="color:var(--pls)">${totalStakedVal>0?fX(totalStakedVal,0):'RPC unavailable'}</div>
+      <div class="cc-sub">${stakedValE>0?'ETH: '+fX(stakedValE,0):''} ${stakedValP>0?'· PLS: '+fX(stakedValP,0):''}</div>
+      <div class="cc-sub" style="margin-top:3px">Locked — cannot move until stake ends</div>
+    </div>
+    <div class="comb-card" style="border-color:var(--grn-bb)">
+      <div class="cc-label">HEX in DEX pools — total</div>
+      <div class="cc-val" style="color:var(--grn)">${fX(totalPoolVal,0)}</div>
+      <div class="cc-sub">ETH pools: ${fX(S.ePoolUsd,0)} · PLS pools: ${fX(S.pPoolUsd,0)}</div>
+      <div class="cc-sub" style="margin-top:3px">Immediately buyable or sellable right now</div>
+    </div>
+    <div class="comb-card" style="border-color:var(--grn-bb)">
+      <div class="cc-label">Real user float — est.</div>
+      <div class="cc-val" style="color:var(--grn)">${fX(eFloat+pFloat,0)}</div>
+      <div class="cc-sub">Ex. OA, bridge, staked — genuinely circulating</div>
+      <div class="cc-sub" style="margin-top:3px;color:var(--mu)">Note: eHEX and pHEX are the same token on different chains</div>
+    </div>
+  `;
+}
+
+/* ── COMBINED ── */
+function renderCombined(){
+  const totalPoolHex = S.ePoolHex + S.pPoolHex;
+  const totalPoolUsd = S.ePoolUsd + S.pPoolUsd;
+  const totalStaked  = S.eStaked + S.pStaked;
+  const eOA = getWalletBal('ethereum','0x9A6a414D6F3497c05E3b1De90520765fA1E07c03');
+  const pOA = getWalletBal('pulsechain','0x9A6a414D6F3497c05E3b1De90520765fA1E07c03');
+  const totalOA = (eOA||3_900_000_000) + (pOA||563_000_000_000);
+  const parity       = S.ePrice>0&&S.pPrice>0 ? (S.pPrice/S.ePrice*100) : 0;
+  const totalMcap    = S.ePrice*HEX_SUPPLY + S.pPrice*HEX_SUPPLY;
+
+  document.getElementById('combinedGrid').innerHTML=`
+    <div class="comb-card">
+      <div class="cc-label">Total HEX in DEX pools</div>
+      <div class="cc-val">${fN(totalPoolHex)}</div>
+      <div class="cc-sub">${fX(totalPoolUsd,0)} — immediately tradeable</div>
+      <div class="cc-bar"><div class="cc-fill" style="width:${(totalPoolHex/HEX_SUPPLY*100).toFixed(2)}%;background:var(--grn)"></div></div>
+    </div>
+    <div class="comb-card">
+      <div class="cc-label">Total staked (both chains)</div>
+      <div class="cc-val">${totalStaked>0?fN(totalStaked):'RPC unavailable'}</div>
+      <div class="cc-sub">${totalStaked>0?fX(totalStaked*(S.ePrice+S.pPrice)/2,0)+' est. value locked':'Check HexStakeAnalyzer'}</div>
+      <div class="cc-bar"><div class="cc-fill" style="width:${totalStaked>0?(totalStaked/HEX_SUPPLY*100).toFixed(1):'0'}%;background:var(--pls)"></div></div>
+    </div>
+    <div class="comb-card">
+      <div class="cc-label">Origin Address total</div>
+      <div class="cc-val">${fN(totalOA)}</div>
+      <div class="cc-sub">${(totalOA/HEX_SUPPLY*100).toFixed(1)}% of total supply — never sold</div>
+      <div class="cc-bar"><div class="cc-fill" style="width:${(totalOA/HEX_SUPPLY*100).toFixed(1)}%;background:var(--red)"></div></div>
+    </div>
+    <div class="comb-card">
+      <div class="cc-label">eHEX market cap</div>
+      <div class="cc-val">${fX(S.ePrice*HEX_SUPPLY,0)}</div>
+      <div class="cc-sub">Based on ${fP(S.ePrice)} × 596.5B supply</div>
+    </div>
+    <div class="comb-card">
+      <div class="cc-label">pHEX market cap</div>
+      <div class="cc-val">${fX(S.pPrice*HEX_SUPPLY,0)}</div>
+      <div class="cc-sub">Based on ${fP(S.pPrice)} × 596.5B supply</div>
+    </div>
+    <div class="comb-card">
+      <div class="cc-label">pHEX / eHEX parity</div>
+      <div class="cc-val" style="color:${parity>50?'var(--grn)':parity>20?'var(--amb)':'var(--phex)'}">${parity.toFixed(2)}%</div>
+      <div class="cc-sub">pHEX is ${(100-parity).toFixed(1)}% cheaper than eHEX</div>
+      <div class="cc-bar"><div class="cc-fill" style="width:${Math.min(parity,100).toFixed(1)}%;background:linear-gradient(90deg,var(--phex),var(--ehex))"></div></div>
+    </div>
+  `;
+}
+
+/* ── KNOWN WALLETS ── */
+function renderWallets(){
+  document.getElementById('walletsBody').innerHTML = KNOWN_WALLETS.map(w=>{
+    const price = w.chain==='ethereum' ? S.ePrice : S.pPrice;
+    const usd = w.hex * price;
+    const pct = (w.hex/HEX_SUPPLY*100).toFixed(3);
+    return `<tr>
+      <td style="color:var(--tx);font-weight:500">${w.name}</td>
+      <td style="color:${w.chain==='ethereum'?'var(--ehex)':'var(--phex)'}">${w.chain==='ethereum'?'Ethereum':'PulseChain'}</td>
+      <td>${fN(w.hex)}</td>
+      <td>${fX(usd,0)}</td>
+      <td>${pct}%</td>
+      <td><span class="w-tag ${w.tag}">${w.tag.toUpperCase()}</span> <span style="color:var(--mu2);font-size:11px">${w.note}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── T-SHARES ── */
+function renderTshares(){
+  // HEX daily inflation is 3.69% annually ÷ 365 = 0.010109% per day
+  const DAILY_INFLATION_PCT = 3.69 / 365 / 100;
+  const dailyHexMinted_e = HEX_SUPPLY * DAILY_INFLATION_PCT;
+  const dailyHexMinted_p = HEX_SUPPLY * DAILY_INFLATION_PCT;
+
+  function tsRow(key,val,sub){ return `<div class="ts-row"><span class="ts-key">${key}</span><div><div class="ts-val">${val}</div>${sub?`<div style="font-size:10px;color:var(--mu2);text-align:right">${sub}</div>`:''}</div></div>`; }
+
+  ['e','p'].forEach((chain,i)=>{
+    const isE=chain==='e';
+    const shareRate = isE ? S.eShareRate : S.pShareRate;
+    const totalShares = isE ? S.eTotalShares : S.pTotalShares;
+    const price = isE ? S.ePrice : S.pPrice;
+    const dailyHex = isE ? dailyHexMinted_e : dailyHexMinted_p;
+    const dailyPerTshare = totalShares>0 ? dailyHex/totalShares : 0;
+    const hexPerTshare = shareRate>0 ? shareRate : null;
+    const usdPerTshare = hexPerTshare ? hexPerTshare*price : null;
+    const annualYield = totalShares>0&&hexPerTshare>0 ? (dailyPerTshare*365/hexPerTshare*100) : 0;
+
+    const content = shareRate>0 ? `
+      ${tsRow('Share Rate (HEX per T-Share)', hexPerTshare?fN(hexPerTshare)+' HEX':'—', usdPerTshare?fX(usdPerTshare,0)+' per T-Share':null)}
+      ${tsRow('T-Share price in USD', usdPerTshare?fX(usdPerTshare,0):'—', null)}
+      ${tsRow('Daily payout per T-Share', dailyPerTshare>0?dailyPerTshare.toFixed(4)+' HEX':'—', dailyPerTshare>0?fX(dailyPerTshare*price,4)+'/day':null)}
+      ${tsRow('Total T-Shares outstanding', totalShares>0?fN(totalShares)+' T-Shares':'—', null)}
+      ${tsRow('Implied annual yield', annualYield>0?annualYield.toFixed(2)+'%':'—', 'at current share rate & inflation')}
+    ` : `<div style="color:var(--mu);font-size:12px">On-chain data unavailable — RPC timed out.<br>Try refreshing or visit <a href="https://hexstakeanalyzer.github.io/Hex-Stake-Analyzer/" target="_blank" style="color:var(--phex)">HexStakeAnalyzer</a> for T-Share data.</div>`;
+
+    document.getElementById('tshareGrid').children[i].innerHTML=`
+      <div class="ts-chain" style="color:${isE?'var(--ehex)':'var(--phex)'}">${isE?'eHEX · Ethereum':'pHEX · PulseChain'}</div>
+      <div class="ts-metrics">${content}</div>
+    `;
+  });
+}
+
+/* ── STAKE CALCULATOR ── */
+function setCalcChain(c){
+  S.calcChain=c;
+  document.getElementById('ccte').className='cct'+(c==='e'?' active':'');
+  document.getElementById('cctp').className='cct'+(c==='p'?' active':'');
+  const price = c==='e' ? S.ePrice : S.pPrice;
+  if(price>0) document.getElementById('cPrice').value=price;
+  runCalc();
+}
+
+function runCalc(){
+  const hex = parseFloat(document.getElementById('cHex').value)||0;
+  const days = Math.min(5555, Math.max(1, parseInt(document.getElementById('cDays').value)||365));
+  const price = parseFloat(document.getElementById('cPrice').value)||0;
+  const shareRate = S.calcChain==='e' ? S.eShareRate : S.pShareRate;
+  const totalShares = S.calcChain==='e' ? S.eTotalShares : S.pTotalShares;
+
+  if(!hex||!price){ document.getElementById('calcOut').innerHTML='<div class="co"><div class="co-label">Waiting</div><div class="co-val" style="color:var(--mu);font-size:13px">Enter details above</div></div>'; return; }
+
+  // Longer pays better bonus (LPB): up to 3× for 5555 days
+  const lpbBonus = 1 + (Math.min(days, LPB_MAX_DAYS)/LPB_MAX_DAYS)*(LPB_MAX_BONUS-1);
+  const bigPayBonus = hex>=1e9 ? 1 + (Math.min(hex,1.5e9)-1e9)/1.5e9*0.1 : 1; // simplified
+  const bonusHex = hex * lpbBonus * bigPayBonus;
+
+  // T-Shares = bonusHex / shareRate (if share rate available)
+  const tshares = shareRate>0 ? bonusHex/shareRate : null;
+
+  // Daily payout
+  const DAILY_INFLATION = HEX_SUPPLY * (3.69/365/100);
+  const dailyPayout = tshares&&totalShares>0 ? DAILY_INFLATION*(tshares/(totalShares+tshares)) : null;
+  const totalPayout = dailyPayout ? dailyPayout*days : null;
+  const apy = tshares&&totalShares>0 ? (dailyPayout*365/hex*100) : null;
+
+  const stakeValue = hex*price;
+  const endValue = totalPayout ? (hex+totalPayout)*price : null;
+
+  document.getElementById('calcOut').innerHTML=`
+    <div class="co">
+      <div class="co-label">HEX staked</div>
+      <div class="co-val">${fN(hex)}</div>
+      <div class="co-sub">${fX(stakeValue,0)} at current price</div>
+    </div>
+    <div class="co">
+      <div class="co-label">Stake duration</div>
+      <div class="co-val">${days.toLocaleString()} days</div>
+      <div class="co-sub">LPB bonus: ${lpbBonus.toFixed(2)}×</div>
+    </div>
+    <div class="co">
+      <div class="co-label">T-Shares received</div>
+      <div class="co-val" style="color:var(--pls)">${tshares?tshares.toFixed(4):'Need RPC'}</div>
+      <div class="co-sub">${shareRate>0?'At current share rate '+fN(shareRate)+' HEX/T':'Share rate unavailable'}</div>
+    </div>
+    <div class="co">
+      <div class="co-label">Daily HEX yield</div>
+      <div class="co-val" style="color:var(--grn)">${dailyPayout?dailyPayout.toFixed(4):'Need RPC'}</div>
+      <div class="co-sub">${dailyPayout?fX(dailyPayout*price,4)+'/day':''}</div>
+    </div>
+    <div class="co">
+      <div class="co-label">Total HEX at end</div>
+      <div class="co-val" style="color:var(--grn)">${totalPayout?fN(hex+totalPayout):'Need RPC'}</div>
+      <div class="co-sub">${totalPayout?'+'+fN(totalPayout)+' HEX yield':''}</div>
+    </div>
+    <div class="co">
+      <div class="co-label">Implied APY</div>
+      <div class="co-val" style="color:var(--amb)">${apy?apy.toFixed(2)+'%':'Need RPC'}</div>
+      <div class="co-sub">at current T-Share rate · prices may change</div>
+    </div>
+  `;
+}
+
+/* ── BOOT ── */
+loadAll();
+setInterval(loadAll, 60000);
+</script>
+</body>
+</html>
