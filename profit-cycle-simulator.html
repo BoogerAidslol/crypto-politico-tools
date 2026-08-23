@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profit Cycle Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06070D;--s1:#0C0E18;--s2:#111525;--s3:#161B2E;
+  --hex:#FF2D78;--hex-b:rgba(255,45,120,.14);--hex-bb:rgba(255,45,120,.3);
+  --grn:#00D4A0;--grn-b:rgba(0,212,160,.12);--grn-bb:rgba(0,212,160,.3);
+  --red:#FF3366;--red-b:rgba(255,51,102,.12);--red-bb:rgba(255,51,102,.3);
+  --amb:#FFB800;--amb-b:rgba(255,184,0,.12);--amb-bb:rgba(255,184,0,.3);
+  --pls:#7B5CFF;--pls-b:rgba(123,92,255,.13);--pls-bb:rgba(123,92,255,.28);
+  --tx:#DDE2F2;--mu:#404866;--mu2:#5A6285;--dim:#161B2E;--br:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 28px;border-bottom:1px solid var(--br);background:rgba(6,7,13,.95);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.3px;background:linear-gradient(135deg,var(--hex),var(--pls));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.badge{background:var(--pls-b);border:1px solid var(--pls-bb);color:var(--pls);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+main{max-width:1360px;margin:0 auto;padding:28px 24px 60px}
+
+/* ── SECTION ── */
+.sec{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:22px;margin-bottom:18px}
+.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--br)}
+.sec-sub{font-size:12px;color:var(--mu2);margin-bottom:16px;line-height:1.7}
+
+/* ── INPUT GRID ── */
+.ig{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.ifield{display:flex;flex-direction:column;gap:5px}
+.ifield label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.ifield .hint{font-size:10px;color:var(--mu);margin-top:-2px}
+.ifwrap{position:relative}
+.ifpre{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--mu2);pointer-events:none}
+.ifinput{width:100%;background:var(--s3);border:1px solid var(--br);border-radius:8px;padding:9px 12px 9px 26px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--tx);outline:none;transition:border-color .15s}
+.ifinput:focus{border-color:var(--pls)}
+.ifinput.plain{padding-left:12px}
+.ifinput.pct::after{content:'%'}
+
+/* ── LADDER ── */
+.ladder-head{display:grid;grid-template-columns:2fr 2fr 2fr 1fr;gap:8px;margin-bottom:6px;padding:0 4px}
+.lh-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase}
+.ladder-row{display:grid;grid-template-columns:2fr 2fr 2fr 1fr;gap:8px;align-items:center;margin-bottom:6px}
+.ladder-row input{width:100%;background:var(--s3);border:1px solid var(--br);border-radius:7px;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--tx);outline:none}
+.ladder-row input:focus{border-color:var(--pls)}
+.rung-type{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:700;border:none;transition:.15s}
+.rung-type.sell{background:var(--red-b);color:var(--red)}
+.rung-type.buy{background:var(--grn-b);color:var(--grn)}
+.add-rung{display:flex;align-items:center;gap:6px;margin-top:6px}
+.add-btn{background:var(--s2);border:1px solid var(--br);color:var(--mu2);padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.15s}
+.add-btn:hover{border-color:var(--pls);color:var(--pls)}
+.run-btn{background:linear-gradient(135deg,var(--hex),var(--pls));color:#fff;border:none;padding:12px 28px;border-radius:9px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;display:block;width:100%;margin-top:14px}
+.run-btn:hover{filter:brightness(1.1)}
+
+/* ── RESULTS ── */
+.results-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.rh-card{background:var(--s2);border-radius:12px;padding:16px;border:1px solid transparent}
+.rh-card.win{border-color:var(--grn-bb)}.rh-card.loss{border-color:var(--red-bb)}.rh-card.info{border-color:var(--pls-bb)}.rh-card.neutral{border-color:var(--br)}
+.rh-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.rh-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700}
+.rh-sub{font-size:10px;color:var(--mu2);margin-top:4px;line-height:1.5}
+.rh-chg{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-top:5px}
+.rh-chg.up{color:var(--grn)}.rh-chg.dn{color:var(--red)}.rh-chg.fl{color:var(--mu2)}
+
+/* ── CYCLE TABLE ── */
+table.cycle{width:100%;border-collapse:collapse;font-size:12px}
+table.cycle th{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--br);text-align:left;white-space:nowrap}
+table.cycle td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:12px}
+table.cycle tr:last-child td{border-bottom:none}
+table.cycle tr:hover td{background:var(--s2)}
+.action-sell{color:var(--red);font-weight:700}.action-buy{color:var(--grn);font-weight:700}.action-hold{color:var(--mu2)}
+.badge-sell{display:inline-block;background:var(--red-b);color:var(--red);padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700}
+.badge-buy{display:inline-block;background:var(--grn-b);color:var(--grn);padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700}
+.badge-start{display:inline-block;background:var(--pls-b);color:var(--pls);padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700}
+
+/* ── CHART ── */
+.chart-wrap{background:var(--s2);border-radius:10px;padding:16px;margin-bottom:16px;overflow:hidden}
+canvas{width:100%;display:block}
+
+/* ── COMPARISON ── */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cmp-card{background:var(--s2);border-radius:12px;padding:16px}
+.cmp-title{font-size:11px;font-weight:700;color:var(--mu2);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.cmp-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--br)}
+.cmp-row:last-child{border-bottom:none}
+.cmp-key{font-size:11px;color:var(--mu2)}
+.cmp-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600}
+
+/* ── INSIGHT BOX ── */
+.insight{background:var(--s3);border-left:3px solid var(--pls);border-radius:0 10px 10px 0;padding:14px 16px;font-size:12px;color:var(--mu2);line-height:1.8;margin-top:14px}
+.insight b{color:var(--tx)}
+
+/* ── PRESETS ── */
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.preset-btn{background:var(--s2);border:1px solid var(--br);color:var(--mu2);padding:6px 14px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.15s}
+.preset-btn:hover{border-color:var(--pls);color:var(--pls)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:40px;color:var(--mu);font-size:13px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){main{padding:16px 14px 40px}.topbar{padding:12px 16px}.compare-grid{grid-template-columns:1fr}.ladder-head,.ladder-row{grid-template-columns:1fr 1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Profit Cycle Simulator</div>
+  <div class="badge">SELL HIGH · BUY LOW · ACCUMULATE</div>
+</div>
+
+<main>
+
+<!-- ── CYCLE TIMING WARNING ── -->
+<div style="background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.25);border-radius:16px;padding:20px 22px;margin-bottom:18px">
+  <div style="display:flex;align-items:flex-start;gap:14px">
+    <div style="font-size:26px;flex-shrink:0;margin-top:2px">⚠️</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--amb);margin-bottom:10px;letter-spacing:.3px">Read this before using the simulator — timing changes everything</div>
+      <div style="font-size:12px;color:var(--mu2);line-height:1.8;margin-bottom:14px">
+        This strategy works best when set up <b style="color:var(--tx)">before or during a price pump</b>, not after one has already happened. If you're reading this after an unexpected rally, the pump you needed to sell into may have already occurred. Using this tool without understanding where you are in the cycle can give misleading results.
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+        <div style="background:rgba(0,212,160,.08);border:1px solid rgba(0,212,160,.2);border-radius:10px;padding:12px 14px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--grn);text-transform:uppercase;margin-bottom:6px">Before the pump — ideal</div>
+          <div style="font-size:11px;color:var(--mu2);line-height:1.6">Set your full sell and buy ladder now. Both phases work as designed. This is the highest-upside scenario.</div>
+        </div>
+        <div style="background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.2);border-radius:10px;padding:12px 14px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--amb);text-transform:uppercase;margin-bottom:6px">During the pump — still good</div>
+          <div style="font-size:11px;color:var(--mu2);line-height:1.6">Set sell ladders above current price to catch remaining upside. Set buy ladders below for the pullback. Partial strategy, still effective.</div>
+        </div>
+        <div style="background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.2);border-radius:10px;padding:12px 14px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--red);text-transform:uppercase;margin-bottom:6px">After the pump — adjust</div>
+          <div style="font-size:11px;color:var(--mu2);line-height:1.6">The sell phase may have passed. Focus on <b style="color:var(--tx)">buy ladders only</b> — accumulate tokens on the pullback. Skip sells or set them far above current price for the next cycle.</div>
+        </div>
+        <div style="background:rgba(123,92,255,.08);border:1px solid rgba(123,92,255,.2);border-radius:10px;padding:12px 14px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--pls);text-transform:uppercase;margin-bottom:6px">At the bottom — accumulate</div>
+          <div style="font-size:11px;color:var(--mu2);line-height:1.6">Ideal entry for the next full cycle. Set buy ladders just below current price to catch the final dip, then set sell ladders for the next pump. Maximum token accumulation potential.</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--mu2);line-height:1.7;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px">
+        <b style="color:var(--tx)">Honest note:</b> No tool can tell you exactly where in the cycle you are right now — that requires your own judgement about the asset's history and current market conditions. HEX historically follows sharp pumps with meaningful pullbacks, but the timing and depth are always uncertain. This simulator shows you the <em>mechanics</em> of the strategy — you still need to make the call on when to deploy it.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── INTRO ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">How This Works</div><div class="sec-line"></div></div>
+  <div class="sec-sub">
+    Simulate a strategy where you sell a portion of your tokens as price rises, bank the proceeds as USD, then buy back more tokens as price falls — ending each cycle with the same or more tokens than you started with, plus profit banked. The key insight: <b style="color:var(--tx)">selling 25% at 2× and buying back at 1× leaves you with more tokens than you started with</b>, because the tokens you sold bought more on the way down than they represented on the way up. <b style="color:var(--amb)">If the pump has already happened, focus on the buy ladders below current price to accumulate on the pullback — then set sell ladders for the next cycle.</b>
+  </div>
+  <div class="presets">
+    <span style="font-size:11px;color:var(--mu2);align-self:center">Quick presets:</span>
+    <button class="preset-btn" onclick="loadPreset('conservative')">Conservative (2× sells)</button>
+    <button class="preset-btn" onclick="loadPreset('aggressive')">Aggressive (5× sells)</button>
+    <button class="preset-btn" onclick="loadPreset('accumulate')">Accumulate (max tokens)</button>
+    <button class="preset-btn" onclick="loadPreset('halfProfit')">Half profit, half reinvest</button>
+  </div>
+</div>
+
+<!-- ── POSITION ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Your Starting Position</div><div class="sec-line"></div></div>
+  <div class="ig">
+    <div class="ifield">
+      <label>Token name</label>
+      <input class="ifinput plain" id="tokenName" type="text" value="HEX" oninput="runSim()">
+    </div>
+    <div class="ifield">
+      <label>Tokens held</label>
+      <input class="ifinput plain" id="startTokens" type="number" value="1000000" step="10000" oninput="runSim()">
+    </div>
+    <div class="ifield">
+      <label>Entry price (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="entryPrice" type="number" value="0.001" step="0.0001" oninput="runSim()"></div>
+    </div>
+    <div class="ifield">
+      <label>Original cost basis (USD)</label>
+      <div class="ifwrap"><span class="ifpre">$</span><input class="ifinput" id="costBasis" type="number" placeholder="0.0005" step="0.00001" oninput="runSim()"></div>
+      <div class="hint">What you originally paid per token — leave blank if same as entry price</div>
+    </div>
+    <div class="ifield">
+      <label>Reinvest % of profits</label>
+      <div class="ifwrap"><input class="ifinput plain" id="reinvestPct" type="number" value="100" min="0" max="100" step="5" oninput="runSim()">
+      <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--mu2)">%</span></div>
+      <div class="hint">100% = reinvest everything · 50% = keep half as profit</div>
+    </div>
+    <div class="ifield">
+      <label>Number of cycles</label>
+      <input class="ifinput plain" id="numCycles" type="number" value="3" min="1" max="10" step="1" oninput="runSim()">
+      <div class="hint">How many times to repeat the full ladder</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SELL LADDER ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Sell Ladder — Price Goes Up</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Set the price levels where you sell, and what % of your current holdings to sell at each level. Prices are multiples of your entry price — so 2× means you sell when price doubles.</div>
+  <div class="ladder-head">
+    <div class="lh-label">Price (× entry)</div>
+    <div class="lh-label">Price (USD)</div>
+    <div class="lh-label">% of tokens to sell</div>
+    <div class="lh-label"></div>
+  </div>
+  <div id="sellLadder"></div>
+  <div class="add-rung">
+    <button class="add-btn" onclick="addRung('sell')">+ Add sell level</button>
+  </div>
+</div>
+
+<!-- ── BUY LADDER ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Buy Ladder — Price Falls Back Down</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Set the price levels where you buy back in, using the banked USD from your sells. Prices are multiples of your entry price — so 0.5× means you buy when price drops to half your entry.</div>
+  <div class="ladder-head">
+    <div class="lh-label">Price (× entry)</div>
+    <div class="lh-label">Price (USD)</div>
+    <div class="lh-label">% of banked USD to use</div>
+    <div class="lh-label"></div>
+  </div>
+  <div id="buyLadder"></div>
+  <div class="add-rung">
+    <button class="add-btn" onclick="addRung('buy')">+ Add buy level</button>
+  </div>
+  <button class="run-btn" onclick="runSim()">▶ Run Simulation</button>
+</div>
+
+<!-- ── RESULTS ── -->
+<div id="resultsSection" style="display:none">
+
+  <div class="sec">
+    <div class="sec-hd"><div class="sec-title">Cycle Results</div><div class="sec-line"></div></div>
+    <div class="results-hero" id="resultsHero"></div>
+    <div class="chart-wrap">
+      <canvas id="cycleChart" height="180"></canvas>
+    </div>
+    <div id="insightBox" class="insight"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hd"><div class="sec-title">Step-by-Step Transaction Log</div><div class="sec-line"></div></div>
+    <div style="overflow-x:auto">
+      <table class="cycle" id="cycleTable">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Action</th>
+            <th>Price</th>
+            <th>Tokens before</th>
+            <th>Tokens traded</th>
+            <th>Tokens after</th>
+            <th>USD banked</th>
+            <th>USD balance</th>
+          </tr>
+        </thead>
+        <tbody id="cycleBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hd"><div class="sec-title">Strategy vs Just Holding</div><div class="sec-line"></div></div>
+    <div class="compare-grid" id="compareGrid"></div>
+  </div>
+
+</div>
+
+</main>
+
+<script>
+'use strict';
+
+// ── State ────────────────────────────────────────────────────────────────
+let sellRungs = [];
+let buyRungs  = [];
+let rungId    = 0;
+
+const fP = n => { if(!n||isNaN(n)) return '$—'; if(n>=1) return '$'+n.toFixed(4); if(n>=0.01) return '$'+n.toFixed(5); if(n>=0.001) return '$'+n.toFixed(6); if(n>=0.0001) return '$'+n.toFixed(7); return '$'+n.toFixed(8); };
+const fN = n => { if(!n||isNaN(n)) return '—'; return n>=1e6?n.toLocaleString(undefined,{maximumFractionDigits:0}):n.toLocaleString(undefined,{maximumFractionDigits:2}); };
+const fB = n => { if(!n||isNaN(n)) return '$—'; if(n>=1e9) return '$'+(n/1e9).toFixed(2)+'B'; if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M'; if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K'; return '$'+n.toFixed(2); };
+const f2 = n => (n>=0?'+':'')+n.toFixed(2)+'%';
+
+// ── Rung management ───────────────────────────────────────────────────────
+function addRung(type, mult, pct){
+  const id = ++rungId;
+  const entry = parseFloat(document.getElementById('entryPrice').value)||0.001;
+  const defaultMult = type==='sell'
+    ? (sellRungs.length===0?2:sellRungs[sellRungs.length-1].mult*1.5)
+    : (buyRungs.length===0?1:(buyRungs[buyRungs.length-1].mult*0.6));
+  const defaultPct = type==='sell'?25:50;
+
+  const rung = { id, type, mult:mult||parseFloat(defaultMult.toFixed(2)), pct:pct||defaultPct };
+  if(type==='sell') sellRungs.push(rung); else buyRungs.push(rung);
+  renderLadder(type);
+  runSim();
+}
+
+function removeRung(id, type){
+  if(type==='sell') sellRungs=sellRungs.filter(r=>r.id!==id);
+  else buyRungs=buyRungs.filter(r=>r.id!==id);
+  renderLadder(type);
+  runSim();
+}
+
+function updateRung(id, type, field, val){
+  const arr = type==='sell'?sellRungs:buyRungs;
+  const r = arr.find(r=>r.id===id);
+  if(r){ r[field]=parseFloat(val)||0; }
+  renderLadder(type);
+  runSim();
+}
+
+function renderLadder(type){
+  const entry = parseFloat(document.getElementById('entryPrice').value)||0.001;
+  const arr = type==='sell'?sellRungs:buyRungs;
+  const containerId = type==='sell'?'sellLadder':'buyLadder';
+  const accentColor = type==='sell'?'var(--red)':'var(--grn)';
+  const pctLabel = type==='sell'?'% of tokens':'% of USD bank';
+
+  document.getElementById(containerId).innerHTML = arr.map(r=>`
+    <div class="ladder-row" id="rung-${r.id}">
+      <input type="number" value="${r.mult}" step="0.1" min="0.01"
+        onchange="updateRung(${r.id},'${type}','mult',this.value)"
+        style="border-color:${accentColor}33">
+      <input type="text" value="${fP(entry*r.mult)}" readonly
+        style="color:${accentColor};background:var(--s2);cursor:default">
+      <input type="number" value="${r.pct}" min="1" max="100" step="5"
+        onchange="updateRung(${r.id},'${type}','pct',this.value)">
+      <button class="rung-type ${type}" onclick="removeRung(${r.id},'${type}')">✕</button>
+    </div>
+  `).join('');
+
+  // Keep USD price col in sync with entry price
+  arr.forEach(r=>{
+    const row = document.getElementById('rung-'+r.id);
+    if(row) row.querySelectorAll('input')[1].value = fP(entry*r.mult);
+  });
+}
+
+// ── Simulation ────────────────────────────────────────────────────────────
+function runSim(){
+  // Sync USD price display
+  ['sell','buy'].forEach(t=>renderLadder(t));
+
+  const tokenName    = document.getElementById('tokenName').value||'TOKEN';
+  const startTokens  = parseFloat(document.getElementById('startTokens').value)||0;
+  const entryPrice   = parseFloat(document.getElementById('entryPrice').value)||0;
+  const costBasis    = parseFloat(document.getElementById('costBasis').value)||entryPrice;
+  const reinvestPct  = parseFloat(document.getElementById('reinvestPct').value)/100;
+  const numCycles    = parseInt(document.getElementById('numCycles').value)||1;
+
+  if(!startTokens||!entryPrice||sellRungs.length===0||buyRungs.length===0){
+    document.getElementById('resultsSection').style.display='none';
+    return;
+  }
+
+  // Sort ladders
+  const sells = [...sellRungs].sort((a,b)=>a.mult-b.mult);
+  const buys  = [...buyRungs].sort((a,b)=>b.mult-a.mult); // high to low — sell at top, buy on way down
+
+  // Run simulation
+  let tokens      = startTokens;
+  let usdBank     = 0;       // total USD set aside (not reinvested)
+  let usdToReinvest = 0;     // USD available to buy back
+  const startValueUsd = startTokens * entryPrice;
+
+  const steps = [];
+  steps.push({
+    step:0, cycle:0, action:'START', price:entryPrice, priceMult:1,
+    tokensBefore:tokens, tokensTraded:0, tokensAfter:tokens,
+    usdChange:0, usdBank:0, usdReinvest:0, note:'Initial position'
+  });
+
+  for(let cycle=1; cycle<=numCycles; cycle++){
+    // ── SELL PHASE ──
+    for(const sell of sells){
+      const price = entryPrice * sell.mult;
+      const tokensToSell = tokens * (sell.pct/100);
+      const proceeds = tokensToSell * price;
+      const toBank = proceeds * (1-reinvestPct);
+      const toReinvest = proceeds * reinvestPct;
+
+      tokens -= tokensToSell;
+      usdBank += toBank;
+      usdToReinvest += toReinvest;
+
+      steps.push({
+        step:steps.length, cycle, action:'SELL', price, priceMult:sell.mult,
+        tokensBefore:tokens+tokensToSell, tokensTraded:-tokensToSell, tokensAfter:tokens,
+        usdChange:proceeds, usdBank, usdReinvest:usdToReinvest,
+        note:`Sold ${sell.pct}% at ${sell.mult}× · Banked ${toBank>0?fB(toBank):'$0'} · To reinvest: ${fB(toReinvest)}`
+      });
+    }
+
+    // ── BUY PHASE ──
+    for(const buy of buys){
+      if(usdToReinvest<=0) break;
+      const price = entryPrice * buy.mult;
+      const usdToSpend = usdToReinvest * (buy.pct/100);
+      const tokensBought = usdToSpend / price;
+
+      tokens += tokensBought;
+      usdToReinvest -= usdToSpend;
+
+      steps.push({
+        step:steps.length, cycle, action:'BUY', price, priceMult:buy.mult,
+        tokensBefore:tokens-tokensBought, tokensTraded:tokensBought, tokensAfter:tokens,
+        usdChange:-usdToSpend, usdBank, usdReinvest:usdToReinvest,
+        note:`Bought with ${buy.pct}% of reinvest bank ($${usdToSpend.toFixed(2)}) at ${buy.mult}×`
+      });
+    }
+  }
+
+  // ── Results ──
+  const finalTokens      = tokens;
+  const tokenGain        = finalTokens - startTokens;
+  const tokenGainPct     = (tokenGain/startTokens)*100;
+  const finalValueUsd    = finalTokens * entryPrice;
+  const profitBanked     = usdBank;
+  const totalValue       = finalValueUsd + profitBanked + usdToReinvest;
+  const holdValue        = startTokens * entryPrice;
+  const strategyEdge     = totalValue - holdValue;
+
+  // Cost basis calculations
+  const capitalDeployed  = startTokens * costBasis;          // what you actually paid
+  const unrealisedGain   = (entryPrice - costBasis) * startTokens; // gain just from price move
+  const cycleGain        = totalValue - holdValue;            // gain purely from the cycle strategy
+  const totalGainVsCost  = totalValue - capitalDeployed;      // total gain vs what you paid
+  const totalGainPct     = capitalDeployed>0 ? (totalGainVsCost/capitalDeployed)*100 : 0;
+  const costDiffNote     = costBasis !== entryPrice;
+
+  document.getElementById('resultsSection').style.display='block';
+
+  document.getElementById('resultsHero').innerHTML=`
+    <div class="rh-card neutral">
+      <div class="rh-label">Capital deployed</div>
+      <div class="rh-val">${fB(capitalDeployed)}</div>
+      <div class="rh-sub">${fN(startTokens)} ${tokenName} × ${fP(costBasis)} cost basis</div>
+      ${costDiffNote?`<div class="rh-chg ${unrealisedGain>=0?'up':'dn'}">${unrealisedGain>=0?'+':''}${fB(unrealisedGain)} unrealised before strategy</div>`:''}
+    </div>
+    <div class="rh-card ${tokenGain>=0?'win':'loss'}">
+      <div class="rh-label">Final ${tokenName} balance</div>
+      <div class="rh-val" style="color:${tokenGain>=0?'var(--grn)':'var(--red)'}">${fN(finalTokens)}</div>
+      <div class="rh-sub">Started with ${fN(startTokens)}</div>
+      <div class="rh-chg ${tokenGain>=0?'up':'dn'}">${tokenGain>=0?'+':''}${fN(tokenGain)} tokens (${f2(tokenGainPct)})</div>
+    </div>
+    <div class="rh-card ${cycleGain>=0?'win':'loss'}">
+      <div class="rh-label">Gain from cycling</div>
+      <div class="rh-val" style="color:${cycleGain>=0?'var(--grn)':'var(--red)'}">${fB(cycleGain)}</div>
+      <div class="rh-sub">Extra value vs just holding — purely from the strategy</div>
+      <div class="rh-chg ${cycleGain>=0?'up':'dn'}">${cycleGain>=0?'+':''}${holdValue>0?((cycleGain/holdValue)*100).toFixed(2):'0'}% over holding</div>
+    </div>
+    <div class="rh-card ${profitBanked>0?'win':'neutral'}">
+      <div class="rh-label">USD profit banked</div>
+      <div class="rh-val" style="color:${profitBanked>0?'var(--grn)':'var(--mu2)'}">${fB(profitBanked)}</div>
+      <div class="rh-sub">Hard cash extracted, not reinvested</div>
+      <div class="rh-chg fl">${(reinvestPct*100).toFixed(0)}% reinvested · ${((1-reinvestPct)*100).toFixed(0)}% banked</div>
+    </div>
+    <div class="rh-card ${usdToReinvest>0?'info':'neutral'}">
+      <div class="rh-label">USD still to deploy</div>
+      <div class="rh-val" style="color:var(--pls)">${fB(usdToReinvest)}</div>
+      <div class="rh-sub">Buy ladders didn't fully absorb — add more rungs or cycles</div>
+    </div>
+    <div class="rh-card ${totalGainVsCost>=0?'win':'loss'}">
+      <div class="rh-label">Total return on capital</div>
+      <div class="rh-val" style="color:${totalGainVsCost>=0?'var(--grn)':'var(--red)'}">${fB(totalValue)}</div>
+      <div class="rh-sub">vs ${fB(capitalDeployed)} deployed</div>
+      <div class="rh-chg ${totalGainVsCost>=0?'up':'dn'}">${totalGainVsCost>=0?'+':''}${fB(totalGainVsCost)} · ${f2(totalGainPct)} on capital</div>
+    </div>
+  `;
+
+  // Transaction log
+  document.getElementById('cycleBody').innerHTML=steps.map(s=>`
+    <tr>
+      <td style="color:var(--mu2)">${s.step===0?'—':s.step} ${s.step>0?'<span style="color:var(--mu);font-size:9px">C'+s.cycle+'</span>':''}</td>
+      <td>${s.action==='START'?'<span class="badge-start">START</span>':s.action==='SELL'?'<span class="badge-sell">SELL</span>':'<span class="badge-buy">BUY</span>'}</td>
+      <td style="color:${s.action==='SELL'?'var(--red)':s.action==='BUY'?'var(--grn)':'var(--mu2)'}">${fP(s.price)} (${s.priceMult}×)</td>
+      <td>${fN(s.tokensBefore)}</td>
+      <td style="color:${s.tokensTraded<0?'var(--red)':s.tokensTraded>0?'var(--grn)':'var(--mu2)'}">${s.tokensTraded===0?'—':(s.tokensTraded>0?'+':'')+fN(s.tokensTraded)}</td>
+      <td style="font-weight:700">${fN(s.tokensAfter)}</td>
+      <td style="color:${s.usdChange>0?'var(--grn)':s.usdChange<0?'var(--red)':'var(--mu2)'}">${s.usdChange===0?'—':(s.usdChange>0?'+':'')+fB(s.usdChange)}</td>
+      <td>${fB(s.usdBank+s.usdReinvest)}</td>
+    </tr>
+  `).join('');
+
+  // Insight
+  const bestSell = sells[sells.length-1];
+  const firstBuy = buys[0];
+  document.getElementById('insightBox').innerHTML=
+    `<b>Why this works mathematically:</b> When you sell at ${bestSell?.mult||2}× and buy back at ${firstBuy?.mult||1}× (entry price), every dollar of proceeds buys ${((bestSell?.mult||2)/(firstBuy?.mult||1)).toFixed(1)}× more tokens on the way down than it represented on the way up. `+
+    `Over ${numCycles} cycle${numCycles>1?'s':''} this compounded into <b style="color:${tokenGain>=0?'var(--grn)':'var(--red)'}">${tokenGain>=0?'+':''}${fN(tokenGain)} ${tokenName}</b> `+
+    `${profitBanked>0?`and <b style="color:var(--grn)">${fB(profitBanked)}</b> hard USD profit banked. `:''}` +
+    `${usdToReinvest>1?`There is still <b style="color:var(--pls)">${fB(usdToReinvest)}</b> in your reinvest bank that hasn't been deployed — adding more buy levels or running more cycles would put this to work. `:''}`+
+    `${reinvestPct<1?`By only reinvesting ${(reinvestPct*100).toFixed(0)}% of proceeds you are deliberately extracting ${((1-reinvestPct)*100).toFixed(0)}% as pure profit each cycle — a hybrid approach that grows both your token bag and your cash position simultaneously.`:`With 100% reinvestment your entire focus is maximising the token count — no USD is extracted but your position grows fastest.`}`;
+
+  // Compare grid
+  document.getElementById('compareGrid').innerHTML=`
+    <div class="cmp-card">
+      <div class="cmp-title" style="color:var(--grn)">This strategy</div>
+      <div class="cmp-row"><span class="cmp-key">Capital deployed</span><span class="cmp-val">${fB(capitalDeployed)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">${tokenName} balance</span><span class="cmp-val" style="color:var(--grn)">${fN(finalTokens)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">Token value at entry px</span><span class="cmp-val">${fB(finalValueUsd)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">USD banked</span><span class="cmp-val" style="color:var(--grn)">${fB(profitBanked)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">USD uninvested</span><span class="cmp-val" style="color:var(--pls)">${fB(usdToReinvest)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">Total value</span><span class="cmp-val" style="color:var(--grn);font-size:15px">${fB(totalValue)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">Return on capital</span><span class="cmp-val" style="color:${totalGainVsCost>=0?'var(--grn)':'var(--red)'}">${f2(totalGainPct)}</span></div>
+    </div>
+    <div class="cmp-card">
+      <div class="cmp-title" style="color:var(--mu2)">Just holding</div>
+      <div class="cmp-row"><span class="cmp-key">Capital deployed</span><span class="cmp-val">${fB(capitalDeployed)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">${tokenName} balance</span><span class="cmp-val">${fN(startTokens)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">Token value at entry px</span><span class="cmp-val">${fB(holdValue)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">USD banked</span><span class="cmp-val" style="color:var(--mu2)">$0</span></div>
+      <div class="cmp-row"><span class="cmp-key">USD uninvested</span><span class="cmp-val" style="color:var(--mu2)">$0</span></div>
+      <div class="cmp-row"><span class="cmp-key">Total value</span><span class="cmp-val" style="font-size:15px">${fB(holdValue)}</span></div>
+      <div class="cmp-row"><span class="cmp-key">Return on capital</span><span class="cmp-val" style="color:${holdValue>=capitalDeployed?'var(--grn)':'var(--red)'}">${f2(capitalDeployed>0?((holdValue-capitalDeployed)/capitalDeployed)*100:0)}</span></div>
+    </div>
+  `;
+
+  // Draw chart
+  drawChart(steps, entryPrice, tokenName);
+}
+
+// ── Chart ──────────────────────────────────────────────────────────────────
+function drawChart(steps, entryPrice, tokenName){
+  const canvas = document.getElementById('cycleChart');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = 180 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  const W = canvas.offsetWidth, H = 180;
+  ctx.clearRect(0,0,W,H);
+
+  const prices = steps.map(s=>s.price);
+  const tokens = steps.map(s=>s.tokensAfter);
+  const maxP = Math.max(...prices)*1.1;
+  const minP = Math.min(...prices)*0.9;
+  const maxT = Math.max(...tokens)*1.05;
+  const minT = Math.min(...tokens)*0.95;
+  const n = steps.length;
+  const pad = {l:50,r:50,t:20,b:30};
+  const W2 = W-pad.l-pad.r, H2 = H-pad.t-pad.b;
+
+  const px = i => pad.l + (i/(n-1))*W2;
+  const pyP = v => pad.t + H2 - ((v-minP)/(maxP-minP))*H2;
+  const pyT = v => pad.t + H2 - ((v-minT)/(maxT-minT))*H2;
+
+  // Grid lines
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+(H2/4)*i;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+  }
+
+  // Token count line (green)
+  ctx.beginPath();ctx.strokeStyle='rgba(0,212,160,0.7)';ctx.lineWidth=2;
+  steps.forEach((s,i)=>{ i===0?ctx.moveTo(px(i),pyT(s.tokensAfter)):ctx.lineTo(px(i),pyT(s.tokensAfter)); });
+  ctx.stroke();
+
+  // Price line (pink)
+  ctx.beginPath();ctx.strokeStyle='rgba(255,45,120,0.7)';ctx.lineWidth=2;
+  steps.forEach((s,i)=>{ i===0?ctx.moveTo(px(i),pyP(s.price)):ctx.lineTo(px(i),pyP(s.price)); });
+  ctx.stroke();
+
+  // Action dots
+  steps.forEach((s,i)=>{
+    if(s.action==='SELL'){ ctx.beginPath();ctx.arc(px(i),pyP(s.price),5,0,Math.PI*2);ctx.fillStyle='#FF3366';ctx.fill(); }
+    if(s.action==='BUY'){  ctx.beginPath();ctx.arc(px(i),pyP(s.price),5,0,Math.PI*2);ctx.fillStyle='#00D4A0';ctx.fill(); }
+  });
+
+  // Labels
+  ctx.font='10px JetBrains Mono';ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,45,120,0.7)';ctx.fillText('Price',pad.l+W2/2,pad.t+8);
+  ctx.fillStyle='rgba(0,212,160,0.7)';ctx.fillText(tokenName+' balance',pad.l+W2/2,pad.t+20);
+
+  // Axis labels
+  ctx.fillStyle='rgba(90,98,133,0.8)';ctx.textAlign='right';
+  ctx.fillText(fP(maxP),pad.l-4,pad.t+4);
+  ctx.fillText(fP(minP),pad.l-4,pad.t+H2);
+}
+
+// ── Presets ────────────────────────────────────────────────────────────────
+function loadPreset(name){
+  sellRungs=[]; buyRungs=[]; rungId=0;
+
+  if(name==='conservative'){
+    document.getElementById('reinvestPct').value=100;
+    document.getElementById('numCycles').value=3;
+    addRung('sell',1.5,20); addRung('sell',2,25); addRung('sell',3,25);
+    addRung('buy',1,50); addRung('buy',0.75,50);
+  } else if(name==='aggressive'){
+    document.getElementById('reinvestPct').value=100;
+    document.getElementById('numCycles').value=2;
+    addRung('sell',2,15); addRung('sell',3,20); addRung('sell',5,25); addRung('sell',10,30);
+    addRung('buy',2,30); addRung('buy',1,40); addRung('buy',0.5,30);
+  } else if(name==='accumulate'){
+    document.getElementById('reinvestPct').value=100;
+    document.getElementById('numCycles').value=5;
+    addRung('sell',2,20); addRung('sell',3,20);
+    addRung('buy',1,60); addRung('buy',0.75,40);
+  } else if(name==='halfProfit'){
+    document.getElementById('reinvestPct').value=50;
+    document.getElementById('numCycles').value=3;
+    addRung('sell',2,30); addRung('sell',4,30);
+    addRung('buy',1,70); addRung('buy',0.8,30);
+  }
+  runSim();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadPreset('conservative');
+</script>
+</body>
+</html>
