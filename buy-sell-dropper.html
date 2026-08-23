@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buy / Sell Ball Dropper — PulseChain Live</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#06070D;color:#DDE2F2;font-family:'Space Grotesk',sans-serif}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;background:#0C0E18;border-bottom:1px solid rgba(255,255,255,.06);flex-wrap:wrap;gap:8px;z-index:10;position:relative}
+.tl{display:flex;flex-direction:column;gap:2px}
+.pair-name{font-size:14px;font-weight:800;letter-spacing:-.3px}
+.live-status{font-size:10px;color:#5A6285;font-family:'JetBrains Mono',monospace}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00D4A0;animation:bk 1.4s ease infinite;margin-right:4px;vertical-align:middle}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.price-display{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;transition:color .3s}
+.stats-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;align-items:center;gap:1px}
+.stat-label{font-size:8px;font-weight:700;letter-spacing:1.5px;color:#5A6285;text-transform:uppercase}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
+.buy{color:#00D4A0} .sell{color:#FF3366} .neu{color:#7B5CFF}
+
+/* ── PRESSURE BAR ── */
+.pressure-wrap{display:flex;align-items:center;gap:6px;min-width:140px}
+.pbar-track{flex:1;height:6px;background:#161B2E;border-radius:6px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:6px;transition:width .6s ease}
+.pbar-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;min-width:36px;text-align:right}
+
+/* ── CANVAS ── */
+#canvasWrap{position:relative;flex:1;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+
+/* ── TICKER ── */
+.ticker{position:absolute;bottom:0;left:0;right:0;background:rgba(6,7,13,.88);backdrop-filter:blur(8px);padding:5px 16px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#5A6285;border-top:1px solid rgba(255,255,255,.05);white-space:nowrap;overflow:hidden}
+
+/* ── BOTTOM BAR ── */
+.bottombar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#0C0E18;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap}
+.pair-input{background:#161B2E;border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:6px 12px;color:#DDE2F2;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;width:260px;transition:border-color .15s}
+.pair-input:focus{border-color:#7B5CFF}
+.load-btn{background:#7B5CFF;color:#fff;border:none;border-radius:7px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.15s}
+.load-btn:hover{background:#9277ff}
+.preset-btns{display:flex;gap:6px;flex-wrap:wrap}
+.preset{background:#161B2E;border:1px solid rgba(255,255,255,.08);color:#5A6285;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:.15s;white-space:nowrap}
+.preset:hover{border-color:#7B5CFF;color:#7B5CFF}
+.hint{font-size:10px;color:#404866}
+
+/* ── LAYOUT ── */
+.layout{display:flex;flex-direction:column;height:100vh}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tl">
+    <div class="pair-name" id="pairName">HEX / WPLS · PulseX</div>
+    <div class="live-status"><span class="live-dot"></span><span id="statusTxt">Fetching live data…</span></div>
+  </div>
+
+  <div class="price-display" id="priceEl">—</div>
+
+  <div class="stats-row">
+    <div class="stat"><span class="stat-label">Buys 24h</span><span class="stat-val buy" id="sBuys">—</span></div>
+    <div class="stat"><span class="stat-label">Sells 24h</span><span class="stat-val sell" id="sSells">—</span></div>
+    <div class="stat"><span class="stat-label">Buy Vol</span><span class="stat-val buy" id="sBuyVol">—</span></div>
+    <div class="stat"><span class="stat-label">Sell Vol</span><span class="stat-val sell" id="sSellVol">—</span></div>
+    <div class="stat"><span class="stat-label">Liquidity</span><span class="stat-val neu" id="sLiq">—</span></div>
+    <div class="stat"><span class="stat-label">5m change</span><span class="stat-val" id="s5m">—</span></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:3px">
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:#5A6285;text-transform:uppercase">Buy pressure</div>
+    <div class="pressure-wrap">
+      <div class="pbar-track"><div class="pbar-fill" id="pbarFill" style="width:50%;background:#FFB800"></div></div>
+      <div class="pbar-label buy" id="pbarLabel">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvasWrap">
+  <canvas id="c"></canvas>
+  <div class="ticker" id="tickerEl">Waiting for first trade data…</div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottombar">
+  <span class="hint">Pair address:</span>
+  <input class="pair-input" id="pairInput" value="0x99fcb6beb162323206532ba2ce059e3a21ce2193" placeholder="Paste any DexScreener pair address">
+  <button class="load-btn" onclick="loadPair()">Load Pair</button>
+  <div class="preset-btns">
+    <button class="preset" onclick="loadPreset('hex')">HEX/WPLS</button>
+    <button class="preset" onclick="loadPreset('plsx')">PLSX/WPLS</button>
+    <button class="preset" onclick="loadPreset('prvx')">PRVX/WPLS</button>
+    <button class="preset" onclick="loadPreset('inc')">INC/WPLS</button>
+  </div>
+  <span class="hint">· Ball size = trade size · Green = buy · Red = sell</span>
+</div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ── PAIR PRESETS ── */
+const PRESETS = {
+  hex:  '0xf1f4ee610b2babb05c635f726ef8b0c568c8dc65',
+  plsx: '0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9',
+  prvx: '0x7f681a5ad615238357ba148c281e2eaefd2de55a',
+  inc:  '0xf808bb6265e9ca27002c0a04562bf50d4fe37eaa'
+};
+
+/* ── STATE ── */
+let pairAddr = '0xf1f4ee610b2babb05c635f726ef8b0c568c8dc65';
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let balls = [];
+let lastBuyPct = 50;
+let lastPrice = 0;
+let fetchTimer = null;
+
+/* ── SIZING ── */
+function resize(){
+  canvas.width  = canvas.offsetWidth  * window.devicePixelRatio;
+  canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+}
+window.addEventListener('resize', resize);
+setTimeout(resize, 50);
+
+/* ── HELPERS ── */
+const fmtP = n => { if(!n||isNaN(n)) return '—'; if(n>=1) return '$'+n.toFixed(4); if(n>=0.001) return '$'+n.toFixed(6); if(n>=0.0001) return '$'+n.toFixed(7); return '$'+n.toFixed(8); };
+const fmtB = n => { if(!n||isNaN(n)) return '$—'; if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M'; if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K'; return '$'+Math.round(n); };
+
+/* ── PHYSICS CONSTANTS ── */
+const GRAVITY  = 0.28;
+const BOUNCE   = 0.42;
+const FRICTION = 0.975;
+const MAX_BALLS = 150;
+
+/* ── PEG LAYOUT ── */
+function getPegs(){
+  const pegs = [];
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  const rows = 6, startY = H * 0.08, endY = H * 0.72;
+  for(let row=0; row<rows; row++){
+    const cols = 7 + (row%2);
+    const y = startY + (endY-startY)*(row/(rows-1));
+    for(let col=0; col<cols; col++){
+      const xOff = row%2===0 ? W/(cols*2) : 0;
+      const x = xOff + col*(W/cols) + W/(cols*2);
+      pegs.push({x, y, r:5});
+    }
+  }
+  return pegs;
+}
+
+/* ── FLOOR ── */
+function floorY(x){
+  const H = canvas.offsetHeight;
+  return H - 36 - Math.sin(x/canvas.offsetWidth * Math.PI * 2.5)*18 - Math.sin(x/canvas.offsetWidth * Math.PI)*10;
+}
+
+/* ── SPAWN BALL ── */
+function spawnBall(isBuy, usd){
+  const W = canvas.offsetWidth;
+  const r = Math.max(9, Math.min(38, 9 + Math.pow(Math.max(0, usd), 0.45) * 2.2));
+  balls.push({
+    x: W*0.12 + Math.random()*W*0.76,
+    y: -r*2,
+    vx: (Math.random()-0.5)*5,
+    vy: Math.random()*1.5 + 0.5,
+    r,
+    isBuy,
+    color: isBuy ? '#00D4A0' : '#FF3366',
+    glowColor: isBuy ? 'rgba(0,212,160,.5)' : 'rgba(255,51,102,.5)',
+    label: usd>=1 ? fmtB(usd) : '',
+    alpha: 1,
+    age: 0,
+    settled: false,
+    settleCount: 0
+  });
+  if(balls.length > MAX_BALLS) balls.splice(0, balls.length-MAX_BALLS);
+}
+
+/* ── DRAW FRAME ── */
+let pegs = [];
+function draw(){
+  if(!pegs.length) pegs = getPegs();
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+
+  ctx.clearRect(0,0,W,H);
+
+  // bg
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#06070D');
+  bg.addColorStop(1,'#0D1020');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+  // subtle grid
+  ctx.strokeStyle='rgba(255,255,255,.02)'; ctx.lineWidth=1;
+  for(let x=0; x<W; x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for(let y=0; y<H; y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // floor
+  ctx.beginPath(); ctx.moveTo(0,H);
+  for(let x=0; x<=W; x+=3) ctx.lineTo(x, floorY(x));
+  ctx.lineTo(W,H); ctx.closePath();
+  ctx.fillStyle='#111525'; ctx.fill();
+  ctx.strokeStyle='rgba(123,92,255,.35)'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  for(let x=0; x<=W; x+=3){ x===0 ? ctx.moveTo(x,floorY(x)) : ctx.lineTo(x,floorY(x)); }
+  ctx.stroke();
+
+  // pegs
+  pegs.forEach(p=>{
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(123,92,255,.5)'; ctx.fill();
+    ctx.strokeStyle='rgba(155,120,255,.6)'; ctx.lineWidth=1; ctx.stroke();
+  });
+
+  // update + draw balls
+  for(let i=balls.length-1; i>=0; i--){
+    const b = balls[i];
+
+    if(!b.settled){
+      b.vy += GRAVITY;
+      b.vx *= FRICTION;
+      b.x  += b.vx;
+      b.y  += b.vy;
+      b.age++;
+
+      // walls
+      if(b.x-b.r<0)   { b.x=b.r;   b.vx=Math.abs(b.vx)*BOUNCE; }
+      if(b.x+b.r>W)   { b.x=W-b.r; b.vx=-Math.abs(b.vx)*BOUNCE; }
+
+      // pegs
+      pegs.forEach(p=>{
+        const dx=b.x-p.x, dy=b.y-p.y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d < b.r+p.r){
+          const nx=dx/d, ny=dy/d;
+          const dot=b.vx*nx+b.vy*ny;
+          b.vx=(b.vx-2*dot*nx)*BOUNCE;
+          b.vy=(b.vy-2*dot*ny)*BOUNCE;
+          b.x=p.x+nx*(b.r+p.r+0.5);
+          b.y=p.y+ny*(b.r+p.r+0.5);
+        }
+      });
+
+      // floor
+      const fy = floorY(b.x);
+      if(b.y+b.r >= fy){
+        b.y=fy-b.r;
+        b.vy=-Math.abs(b.vy)*BOUNCE;
+        b.vx*=0.8;
+        if(Math.abs(b.vy)<0.5 && Math.abs(b.vx)<0.3){ b.settleCount++; if(b.settleCount>10) b.settled=true; }
+      }
+    }
+
+    // fade after settling
+    if(b.settled) b.age++;
+    if(b.age > 320) b.alpha = Math.max(0, 1-(b.age-320)/100);
+    if(b.alpha<=0){ balls.splice(i,1); continue; }
+
+    // draw
+    ctx.save();
+    ctx.globalAlpha = b.alpha;
+    ctx.shadowColor = b.glowColor;
+    ctx.shadowBlur  = 18;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    const grad = ctx.createRadialGradient(b.x-b.r*.35, b.y-b.r*.35, b.r*.05, b.x, b.y, b.r);
+    grad.addColorStop(0, b.color+'FF');
+    grad.addColorStop(0.6, b.color+'CC');
+    grad.addColorStop(1,   b.color+'55');
+    ctx.fillStyle=grad; ctx.fill();
+    ctx.shadowBlur=0;
+
+    // label
+    if(b.label && b.r>13){
+      ctx.shadowBlur=0;
+      ctx.fillStyle='rgba(0,0,0,.7)';
+      ctx.font=`bold ${Math.round(b.r*.52)}px JetBrains Mono`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(b.label, b.x+0.5, b.y+0.5);
+      ctx.fillStyle='#fff';
+      ctx.fillText(b.label, b.x, b.y);
+    }
+    ctx.restore();
+  }
+
+  // buy/sell legend at top
+  ctx.save();
+  ctx.globalAlpha=0.55;
+  // green ball sample
+  ctx.beginPath(); ctx.arc(W/2-60,22,8,0,Math.PI*2);
+  ctx.fillStyle='#00D4A0'; ctx.fill();
+  ctx.fillStyle='#00D4A0'; ctx.font='bold 11px Space Grotesk';
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText('BUY', W/2-48, 22);
+  // red ball sample
+  ctx.beginPath(); ctx.arc(W/2+20,22,8,0,Math.PI*2);
+  ctx.fillStyle='#FF3366'; ctx.fill();
+  ctx.fillStyle='#FF3366';
+  ctx.fillText('SELL', W/2+32, 22);
+  ctx.restore();
+
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ── FETCH DATA ── */
+async function fetchData(){
+  try{
+    const r = await fetch('https://api.dexscreener.com/latest/dex/pairs/pulsechain/'+pairAddr);
+    const d = await r.json();
+    const pair = d.pair || (Array.isArray(d.pairs) && d.pairs[0]);
+    if(!pair) return;
+
+    // price
+    const price = parseFloat(pair.priceUsd)||0;
+    const pEl = document.getElementById('priceEl');
+    pEl.textContent = fmtP(price);
+    pEl.style.color = price >= lastPrice ? '#00D4A0' : '#FF3366';
+    lastPrice = price;
+
+    // pair name
+    document.getElementById('pairName').textContent =
+      (pair.baseToken?.symbol||'?') + ' / ' + (pair.quoteToken?.symbol||'?') +
+      ' · ' + (pair.dexId||'') + (pair.labels ? ' '+pair.labels[0] : '');
+
+    // stats
+    const b24 = pair.txns?.h24?.buys  || 0;
+    const s24 = pair.txns?.h24?.sells || 0;
+    const vol24 = pair.volume?.h24 || 0;
+    const buyPct = b24+s24>0 ? Math.round(b24/(b24+s24)*100) : 50;
+    const buyVol24 = vol24*(buyPct/100);
+    const selVol24 = vol24-buyVol24;
+    const liq = pair.liquidity?.usd || 0;
+    const chg5m = parseFloat(pair.priceChange?.m5||0);
+    const chg24 = parseFloat(pair.priceChange?.h24||0);
+
+    document.getElementById('sBuys').textContent    = b24.toLocaleString();
+    document.getElementById('sSells').textContent   = s24.toLocaleString();
+    document.getElementById('sBuyVol').textContent  = fmtB(buyVol24);
+    document.getElementById('sSellVol').textContent = fmtB(selVol24);
+    document.getElementById('sLiq').textContent     = fmtB(liq);
+    const s5 = document.getElementById('s5m');
+    s5.textContent = (chg5m>=0?'+':'')+chg5m.toFixed(2)+'%';
+    s5.style.color = chg5m>=0?'#00D4A0':'#FF3366';
+
+    // pressure bar
+    const fill = document.getElementById('pbarFill');
+    const label = document.getElementById('pbarLabel');
+    fill.style.width = buyPct+'%';
+    fill.style.background = buyPct>60?'#00D4A0':buyPct<40?'#FF3366':'#FFB800';
+    label.textContent = buyPct+'%';
+    label.style.color = buyPct>60?'#00D4A0':buyPct<40?'#FF3366':'#FFB800';
+    lastBuyPct = buyPct;
+
+    // spawn balls
+    const vol5m = (pair.volume?.m5 || vol24/96 || 5);
+    const numBalls = Math.max(1, Math.min(5, Math.round(Math.abs(chg5m)/0.8+1)));
+    for(let i=0; i<numBalls; i++){
+      setTimeout(()=>{
+        const isBuy = Math.random() < (buyPct/100);
+        spawnBall(isBuy, vol5m/numBalls*(0.4+Math.random()*1.2));
+      }, i*250 + Math.random()*200);
+    }
+
+    // ticker
+    document.getElementById('tickerEl').innerHTML =
+      `<span style="color:${chg5m>=0?'#00D4A0':'#FF3366'}">${chg5m>=0?'▲':'▼'} ${Math.abs(chg5m).toFixed(2)}% 5m</span> &nbsp;·&nbsp; ` +
+      `<span style="color:${chg24>=0?'#00D4A0':'#FF3366'}">${chg24>=0?'▲':'▼'} ${Math.abs(chg24).toFixed(2)}% 24h</span> &nbsp;·&nbsp; ` +
+      `24h: <span style="color:#00D4A0">${b24.toLocaleString()} buys</span> · <span style="color:#FF3366">${s24.toLocaleString()} sells</span> &nbsp;·&nbsp; ` +
+      `Vol: ${fmtB(vol24)} &nbsp;·&nbsp; Liq: <span style="color:#7B5CFF">${fmtB(liq)}</span> &nbsp;·&nbsp; ` +
+      `Updated: ${new Date().toLocaleTimeString()}`;
+
+    document.getElementById('statusTxt').textContent = 'Live · '+new Date().toLocaleTimeString();
+
+  }catch(e){
+    document.getElementById('statusTxt').textContent = 'Retrying…';
+  }
+}
+
+function loadPair(){
+  const val = document.getElementById('pairInput').value.trim();
+  if(val){ pairAddr=val; balls=[]; pegs=[]; fetchData(); }
+}
+
+function loadPreset(name){
+  pairAddr = PRESETS[name] || PRESETS.hex;
+  document.getElementById('pairInput').value = pairAddr;
+  balls=[]; pegs=[]; fetchData();
+}
+
+// initial load + interval
+fetchData();
+setInterval(fetchData, 10000);
+
+// rebuild pegs on resize
+window.addEventListener('resize', ()=>{ pegs=[]; resize(); });
+</script>
+</body>
+</html>
