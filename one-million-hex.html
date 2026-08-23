@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 Million HEX Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060A;--s1:#0A0C14;--s2:#0F1220;--s3:#14182A;
+  --ehex:#FF8C00;--ehex-b:rgba(255,140,0,.13);--ehex-bb:rgba(255,140,0,.28);
+  --phex:#FF2D78;--phex-b:rgba(255,45,120,.13);--phex-bb:rgba(255,45,120,.28);
+  --grn:#00D4A0;--grn-b:rgba(0,212,160,.12);--grn-bb:rgba(0,212,160,.28);
+  --pls:#7B5CFF;--pls-b:rgba(123,92,255,.12);
+  --tx:#DDE2F2;--mu:#404866;--mu2:#5A6285;--br:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px}
+
+.wrap{width:100%;max-width:820px}
+
+/* header */
+.hdr{text-align:center;margin-bottom:32px}
+.hdr-eye{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--mu2);text-transform:uppercase;margin-bottom:10px}
+.hdr-title{font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1;background:linear-gradient(135deg,var(--ehex),var(--phex));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.hdr-sub{font-size:13px;color:var(--mu2)}
+.live-pill{display:inline-flex;align-items:center;gap:5px;background:var(--grn-b);border:1px solid var(--grn-bb);color:var(--grn);padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px;margin-top:12px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:bk 1.4s ease infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* amount selector */
+.amount-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px;flex-wrap:wrap}
+.amount-label{font-size:12px;color:var(--mu2)}
+.amount-input{background:var(--s2);border:1px solid var(--br);border-radius:10px;padding:10px 16px;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--tx);outline:none;width:200px;text-align:center;transition:border-color .15s}
+.amount-input:focus{border-color:var(--phex)}
+.currency-toggle{display:flex;background:var(--s3);border-radius:8px;padding:2px;gap:2px}
+.ct{padding:6px 14px;border-radius:6px;border:none;background:none;color:var(--mu2);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.ct.active{background:var(--phex);color:#fff}
+
+/* main value cards */
+.value-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.vc{border-radius:18px;padding:28px 24px;position:relative;overflow:hidden;border:1px solid}
+.vc.ehex{background:var(--ehex-b);border-color:var(--ehex-bb)}
+.vc.phex{background:var(--phex-b);border-color:var(--phex-bb)}
+.vc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.vc.ehex::before{background:var(--ehex);box-shadow:0 0 14px var(--ehex)}
+.vc.phex::before{background:var(--phex);box-shadow:0 0 14px var(--phex)}
+.vc-chain{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.vc.ehex .vc-chain{color:var(--ehex)}
+.vc.phex .vc-chain{color:var(--phex)}
+.vc-value{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;line-height:1;color:var(--tx);margin-bottom:6px;letter-spacing:-1px}
+.vc-price{font-size:12px;color:var(--mu2);margin-bottom:12px;font-family:'JetBrains Mono',monospace}
+.vc-chg{display:inline-flex;padding:4px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
+.vc-chg.up{background:var(--grn-b);color:var(--grn)}.vc-chg.dn{background:rgba(255,51,102,.12);color:#FF3366}.vc-chg.fl{background:var(--s3);color:var(--mu2)}
+
+/* stat row */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.sc{background:var(--s1);border:1px solid var(--br);border-radius:12px;padding:14px 16px}
+.sc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.sc-val{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:var(--tx)}
+.sc-sub{font-size:10px;color:var(--mu2);margin-top:3px}
+
+/* milestone bar */
+.milestone-wrap{background:var(--s1);border:1px solid var(--br);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+.ms-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--mu2);text-transform:uppercase;margin-bottom:14px}
+.ms-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.ms-row:last-child{margin-bottom:0}
+.ms-label{font-size:11px;color:var(--mu2);width:100px;flex-shrink:0}
+.ms-track{flex:1;height:6px;background:var(--s3);border-radius:6px;overflow:hidden}
+.ms-fill{height:100%;border-radius:6px;transition:width .8s ease}
+.ms-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;width:80px;text-align:right;flex-shrink:0}
+
+/* insight */
+.insight{background:var(--s2);border-left:3px solid var(--pls);border-radius:0 12px 12px 0;padding:14px 16px;font-size:12px;color:var(--mu2);line-height:1.7}
+.insight b{color:var(--tx)}
+
+/* footer */
+.foot{text-align:center;margin-top:20px;font-size:11px;color:var(--mu);font-family:'JetBrains Mono',monospace}
+.upd{color:var(--mu2)}
+
+@media(max-width:600px){.value-grid{grid-template-columns:1fr}.vc-value{font-size:28px}.hdr-title{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-eye">The Crypto-Politico Down Under</div>
+    <div class="hdr-title">1,000,000 HEX</div>
+    <div class="hdr-sub">Live value of one million HEX — on both chains, in any currency</div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE · updates every 30 seconds</div>
+  </div>
+
+  <!-- AMOUNT + CURRENCY -->
+  <div class="amount-row">
+    <span class="amount-label">HEX amount:</span>
+    <input class="amount-input" id="hexAmt" type="number" value="1000000" step="100000" oninput="render()">
+    <div class="currency-toggle">
+      <button class="ct active" id="btnUSD" onclick="setCur('USD')">USD</button>
+      <button class="ct" id="btnAUD" onclick="setCur('AUD')">AUD</button>
+    </div>
+  </div>
+
+  <!-- MAIN VALUE CARDS -->
+  <div class="value-grid">
+    <div class="vc ehex">
+      <div class="vc-chain">eHEX · Ethereum</div>
+      <div class="vc-value" id="eVal">—</div>
+      <div class="vc-price" id="ePrice">Loading…</div>
+      <span class="vc-chg fl" id="eChg">—</span>
+    </div>
+    <div class="vc phex">
+      <div class="vc-chain">pHEX · PulseChain</div>
+      <div class="vc-value" id="pVal">—</div>
+      <div class="vc-price" id="pPrice">Loading…</div>
+      <span class="vc-chg fl" id="pChg">—</span>
+    </div>
+  </div>
+
+  <!-- STAT ROW -->
+  <div class="stat-row">
+    <div class="sc"><div class="sc-label">eHEX vs pHEX</div><div class="sc-val" id="parityPct">—</div><div class="sc-sub">parity ratio</div></div>
+    <div class="sc"><div class="sc-label">Dollar gap</div><div class="sc-val" id="dollarGap">—</div><div class="sc-sub">per token</div></div>
+    <div class="sc"><div class="sc-label">Combined value</div><div class="sc-val" id="combined">—</div><div class="sc-sub">eHEX + pHEX</div></div>
+    <div class="sc"><div class="sc-label">AUD rate</div><div class="sc-val" id="audRate">—</div><div class="sc-sub">USD → AUD</div></div>
+  </div>
+
+  <!-- MILESTONE BARS -->
+  <div class="milestone-wrap">
+    <div class="ms-title">What does your HEX need to reach?</div>
+    <div class="ms-row">
+      <span class="ms-label">$10K</span>
+      <div class="ms-track"><div class="ms-fill" id="ms10k" style="background:var(--phex)"></div></div>
+      <span class="ms-val" id="ms10kPx">—</span>
+    </div>
+    <div class="ms-row">
+      <span class="ms-label">$100K</span>
+      <div class="ms-track"><div class="ms-fill" id="ms100k" style="background:var(--phex)"></div></div>
+      <span class="ms-val" id="ms100kPx">—</span>
+    </div>
+    <div class="ms-row">
+      <span class="ms-label">$1M</span>
+      <div class="ms-track"><div class="ms-fill" id="ms1m" style="background:var(--ehex)"></div></div>
+      <span class="ms-val" id="ms1mPx">—</span>
+    </div>
+    <div class="ms-row">
+      <span class="ms-label">$10M</span>
+      <div class="ms-track"><div class="ms-fill" id="ms10m" style="background:var(--ehex)"></div></div>
+      <span class="ms-val" id="ms10mPx">—</span>
+    </div>
+  </div>
+
+  <!-- INSIGHT -->
+  <div class="insight" id="insightBox">Loading market data…</div>
+
+  <!-- FOOTER -->
+  <div class="foot">
+    <span class="upd" id="updEl">Connecting…</span> · Data: DexScreener · Not financial advice
+  </div>
+
+</div>
+
+<script>
+'use strict';
+const HEX = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39';
+let S = { e:0, p:0, eChg:0, pChg:0, aud:1.55, cur:'USD' };
+
+const sym = () => S.cur==='AUD' ? 'A$' : '$';
+const conv = n => n * (S.cur==='AUD' ? S.aud : 1);
+const fV = n => {
+  const v=conv(n), s=sym();
+  if(v>=1e9) return s+(v/1e9).toFixed(2)+'B';
+  if(v>=1e6) return s+(v/1e6).toFixed(2)+'M';
+  if(v>=1e3) return s+(v/1e3).toFixed(1)+'K';
+  return s+v.toFixed(2);
+};
+const fP = n => {
+  const v=conv(n), s=sym();
+  if(v>=1) return s+v.toFixed(4);
+  if(v>=0.001) return s+v.toFixed(6);
+  if(v>=0.0001) return s+v.toFixed(7);
+  return s+v.toFixed(8);
+};
+const fC = n => (n>=0?'+':'')+n.toFixed(2)+'%';
+const fc = n => n>0.3?'up':n<-0.3?'dn':'fl';
+
+function setCur(c){
+  S.cur=c;
+  document.getElementById('btnUSD').className='ct'+(c==='USD'?' active':'');
+  document.getElementById('btnAUD').className='ct'+(c==='AUD'?' active':'');
+  render();
+}
+
+async function load(){
+  try{
+    const [dr, ar] = await Promise.all([
+      fetch('https://api.dexscreener.com/latest/dex/tokens/'+HEX).then(r=>r.json()),
+      fetch('https://api.exchangerate-api.com/v4/latest/USD').then(r=>r.json())
+    ]);
+    const pairs = dr.pairs||[];
+    const ep = pairs.filter(p=>p.chainId==='ethereum').sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+    const pp = pairs.filter(p=>p.chainId==='pulsechain').sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+    if(ep){ S.e=parseFloat(ep.priceUsd)||0; S.eChg=parseFloat(ep.priceChange?.h24||0); }
+    if(pp){ S.p=parseFloat(pp.priceUsd)||0; S.pChg=parseFloat(pp.priceChange?.h24||0); }
+    S.aud = ar?.rates?.AUD||1.55;
+    render();
+    document.getElementById('updEl').textContent='Updated '+new Date().toLocaleTimeString();
+  }catch(e){
+    document.getElementById('updEl').textContent='Retrying…';
+  }
+}
+
+function render(){
+  const amt = parseFloat(document.getElementById('hexAmt').value)||1000000;
+  const eVal = S.e*amt, pVal = S.p*amt;
+  const parity = S.e>0&&S.p>0 ? (S.p/S.e*100) : 0;
+  const gap = Math.abs(S.e-S.p);
+
+  document.getElementById('eVal').textContent = fV(eVal);
+  document.getElementById('ePrice').textContent = fP(S.e)+' per HEX';
+  const ec=document.getElementById('eChg'); ec.textContent=(S.eChg>=0?'▲ ':'▼ ')+Math.abs(S.eChg).toFixed(2)+'% 24h'; ec.className='vc-chg '+fc(S.eChg);
+
+  document.getElementById('pVal').textContent = fV(pVal);
+  document.getElementById('pPrice').textContent = fP(S.p)+' per HEX';
+  const pc=document.getElementById('pChg'); pc.textContent=(S.pChg>=0?'▲ ':'▼ ')+Math.abs(S.pChg).toFixed(2)+'% 24h'; pc.className='vc-chg '+fc(S.pChg);
+
+  document.getElementById('parityPct').textContent = parity.toFixed(1)+'%';
+  document.getElementById('dollarGap').textContent = fP(gap);
+  document.getElementById('combined').textContent = fV(eVal+pVal);
+  document.getElementById('audRate').textContent = 'A$'+S.aud.toFixed(4);
+
+  // Milestone bars — based on pHEX (the one that needs to move most)
+  const price = S.p||S.e||0.001;
+  const milestones = [
+    {id:'10k',target:10000},
+    {id:'100k',target:100000},
+    {id:'1m',target:1000000},
+    {id:'10m',target:10000000}
+  ];
+  milestones.forEach(m=>{
+    const needed = m.target/amt;  // price per token needed
+    const pct = Math.min(price/needed*100, 100);
+    const mult = (needed/price).toFixed(2);
+    document.getElementById('ms'+m.id).style.width=pct+'%';
+    document.getElementById('ms'+m.id+'Px').textContent=fP(needed)+' ('+mult+'×)';
+    document.getElementById('ms'+m.id+'Px').style.color=pct>=100?'var(--grn)':'var(--mu2)';
+  });
+
+  // Insight
+  const relMom = S.pChg - S.eChg;
+  document.getElementById('insightBox').innerHTML =
+    `<b>${amt.toLocaleString()} HEX</b> is worth <b style="color:var(--ehex)">${fV(eVal)}</b> on Ethereum and <b style="color:var(--phex)">${fV(pVal)}</b> on PulseChain right now. ` +
+    `pHEX is trading at <b>${parity.toFixed(1)}%</b> of eHEX price — a <b>${(100-parity).toFixed(1)}%</b> discount on PulseChain. ` +
+    (relMom>0
+      ? `pHEX has outperformed eHEX by <b style="color:var(--grn)">${relMom.toFixed(2)}%</b> in the last 24h — the discount is narrowing.`
+      : `eHEX has outperformed pHEX by <b style="color:var(--phex)">${Math.abs(relMom).toFixed(2)}%</b> in the last 24h — the discount is widening.`
+    );
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
