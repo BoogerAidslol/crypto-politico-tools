@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseChain Liquidity Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060A;--s1:#0A0C14;--s2:#0F1220;--s3:#14182A;
+  --pls:#7B5CFF;--pls-b:rgba(123,92,255,.13);--pls-bb:rgba(123,92,255,.28);
+  --grn:#00D4A0;--grn-b:rgba(0,212,160,.12);--grn-bb:rgba(0,212,160,.28);
+  --red:#FF3366;--red-b:rgba(255,51,102,.12);--red-bb:rgba(255,51,102,.28);
+  --amb:#FFB800;--amb-b:rgba(255,184,0,.12);--amb-bb:rgba(255,184,0,.28);
+  --hex:#FF2D78;--hex-b:rgba(255,45,120,.12);
+  --tx:#DDE2F2;--mu:#404866;--mu2:#5A6285;--dim:#14182A;--br:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 28px;border-bottom:1px solid var(--br);background:rgba(5,6,10,.95);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:10px}
+.brand{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.brand .p{color:var(--pls)}.brand .d{color:var(--mu)}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--grn-b);border:1px solid var(--grn-bb);color:var(--grn);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:bk 1.4s ease infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.rfbtn{background:var(--pls-b);border:1px solid var(--pls-bb);color:var(--pls);padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif}
+.rfbtn.sp .spin{animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.upd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mu2)}
+
+/* ── LAYOUT ── */
+main{max-width:1360px;margin:0 auto;padding:24px 22px 60px}
+
+/* ── FUEL GAUGE HERO ── */
+.fuel-hero{background:var(--s1);border:1px solid var(--br);border-radius:20px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden}
+.fuel-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:background .8s}
+.fuel-eye{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;text-align:center;margin-bottom:14px}
+.gauge-container{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:20px}
+.gauge-svg-wrap{position:relative;width:200px;height:110px;flex-shrink:0}
+.gauge-label-center{position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center}
+.gauge-score{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;line-height:1}
+.gauge-word{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.gauge-signals{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;flex:1;min-width:300px}
+.gs-item{background:var(--s2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.gs-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.gs-info{}
+.gs-label{font-size:10px;color:var(--mu2);margin-bottom:3px}
+.gs-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
+.fuel-verdict{background:var(--s2);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--mu2);line-height:1.7;text-align:center}
+.fuel-verdict b{color:var(--tx)}
+
+/* ── SECTION ── */
+.sec{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:22px;margin-bottom:18px}
+.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--br)}
+.sec-sub{font-size:12px;color:var(--mu2);margin-bottom:16px;line-height:1.7}
+
+/* ── BRIDGE FLOW ── */
+.flow-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+.flow-card{border-radius:14px;padding:18px;border:1px solid}
+.flow-card.in{background:var(--grn-b);border-color:var(--grn-bb)}
+.flow-card.out{background:var(--red-b);border-color:var(--red-bb)}
+.flow-card.net{background:var(--pls-b);border-color:var(--pls-bb)}
+.flow-card.tvl{background:var(--s2);border-color:var(--br)}
+.fc-eye{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:7px}
+.fc-eye.in{color:var(--grn)}.fc-eye.out{color:var(--red)}.fc-eye.net{color:var(--pls)}.fc-eye.tvl{color:var(--mu2)}
+.fc-val{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;line-height:1}
+.fc-sub{font-size:11px;color:var(--mu2);margin-top:6px}
+
+/* ── TIME TABS ── */
+.time-tabs{display:flex;background:var(--s3);border-radius:9px;padding:2px;margin-bottom:16px;width:fit-content;gap:2px}
+.tt{padding:6px 16px;border-radius:7px;border:none;background:none;color:var(--mu2);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.tt.active{background:var(--pls);color:#fff}
+
+/* ── FLOW BARS ── */
+.flow-timeline{display:flex;flex-direction:column;gap:6px}
+.ft-row{display:flex;align-items:center;gap:10px}
+.ft-date{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mu2);width:55px;flex-shrink:0}
+.ft-bars{flex:1;display:flex;gap:2px;height:20px}
+.ft-in{background:var(--grn);border-radius:3px 0 0 3px;min-width:2px;transition:width .5s ease}
+.ft-out{background:var(--red);border-radius:0 3px 3px 0;min-width:2px;transition:width .5s ease}
+.ft-net{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;width:70px;text-align:right;flex-shrink:0}
+.ft-net.pos{color:var(--grn)}.ft-net.neg{color:var(--red)}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}
+.stat-card{background:var(--s2);border-radius:12px;padding:14px 16px;border:1px solid var(--br)}
+.sc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.sc-val{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700;color:var(--tx)}
+.sc-sub{font-size:10px;color:var(--mu2);margin-top:4px;line-height:1.5}
+.sc-bar{height:4px;background:var(--dim);border-radius:4px;margin-top:8px;overflow:hidden}
+.sc-fill{height:100%;border-radius:4px;transition:width .8s ease}
+.sc-chg{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-top:5px}
+.sc-chg.up{color:var(--grn)}.sc-chg.dn{color:var(--red)}.sc-chg.fl{color:var(--mu2)}
+
+/* ── PRESSURE METER ── */
+.pressure-wrap{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.pm-track{flex:1;height:10px;background:var(--s3);border-radius:10px;overflow:hidden;min-width:200px}
+.pm-fill{height:100%;border-radius:10px;transition:width .8s ease}
+.pm-labels{display:flex;justify-content:space-between;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--mu);margin-top:4px}
+
+/* ── ASSESSMENT BOX ── */
+.assessment{border-radius:14px;padding:18px 20px;margin-top:16px;border:1px solid}
+.assessment.bullish{background:var(--grn-b);border-color:var(--grn-bb)}
+.assessment.neutral{background:var(--s2);border-color:var(--br)}
+.assessment.bearish{background:var(--red-b);border-color:var(--red-bb)}
+.assessment.caution{background:var(--amb-b);border-color:var(--amb-bb)}
+.as-title{font-size:13px;font-weight:700;margin-bottom:8px}
+.as-body{font-size:12px;color:var(--mu2);line-height:1.8}
+
+/* ── MINI CHART (canvas) ── */
+.chart-wrap{background:var(--s2);border-radius:10px;padding:12px;margin-top:14px;overflow:hidden}
+canvas{display:block;width:100%}
+
+/* ── SKELETON ── */
+.sk{background:var(--dim);border-radius:4px;animation:sh 1.6s infinite;display:inline-block}
+@keyframes sh{0%,100%{opacity:.4}50%{opacity:.7}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){main{padding:16px 14px 40px}.topbar{padding:12px 16px}.gauge-svg-wrap{width:160px;height:90px}.gauge-score{font-size:28px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="brand"><span class="p">PulseChain</span><span class="d"> · </span>Liquidity Intelligence</div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="upd" id="updEl">Connecting…</span>
+    <button class="rfbtn" id="rfBtn" onclick="loadAll()"><span class="spin">↻</span> Refresh</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ── FUEL GAUGE HERO ── -->
+<div class="fuel-hero" id="fuelHero">
+  <div class="fuel-eye">PulseChain Fuel Gauge — Is the momentum sustainable?</div>
+  <div class="gauge-container">
+    <div class="gauge-svg-wrap">
+      <svg viewBox="0 0 200 110" xmlns="http://www.w3.org/2000/svg" width="200" height="110">
+        <!-- background arc -->
+        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#14182A" stroke-width="16" stroke-linecap="round"/>
+        <!-- colored arc — drawn via JS -->
+        <path id="gaugeArc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#7B5CFF" stroke-width="16" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+        <!-- tick marks -->
+        <line x1="20" y1="100" x2="28" y2="100" stroke="#404866" stroke-width="2"/>
+        <line x1="180" y1="100" x2="172" y2="100" stroke="#404866" stroke-width="2"/>
+        <line x1="100" y1="20" x2="100" y2="28" stroke="#404866" stroke-width="2"/>
+        <!-- labels -->
+        <text x="10" y="115" fill="#5A6285" font-size="9" font-family="JetBrains Mono">Low</text>
+        <text x="175" y="115" fill="#5A6285" font-size="9" font-family="JetBrains Mono">High</text>
+      </svg>
+      <div class="gauge-label-center">
+        <div class="gauge-score" id="gaugeScore"><span class="sk" style="width:60px;height:34px"></span></div>
+        <div class="gauge-word" id="gaugeWord">Loading</div>
+      </div>
+    </div>
+    <div class="gauge-signals" id="gaugeSignals">
+      <div class="gs-item"><div class="gs-dot" style="background:var(--mu)"></div><div class="gs-info"><div class="gs-label">Bridge flow</div><div class="gs-val sk" style="width:70px;height:14px"></div></div></div>
+      <div class="gs-item"><div class="gs-dot" style="background:var(--mu)"></div><div class="gs-info"><div class="gs-label">TVL trend</div><div class="gs-val sk" style="width:70px;height:14px"></div></div></div>
+      <div class="gs-item"><div class="gs-dot" style="background:var(--mu)"></div><div class="gs-info"><div class="gs-label">Dry powder</div><div class="gs-val sk" style="width:70px;height:14px"></div></div></div>
+      <div class="gs-item"><div class="gs-dot" style="background:var(--mu)"></div><div class="gs-info"><div class="gs-label">Vol / TVL</div><div class="gs-val sk" style="width:70px;height:14px"></div></div></div>
+      <div class="gs-item"><div class="gs-dot" style="background:var(--mu)"></div><div class="gs-info"><div class="gs-label">Concentration</div><div class="gs-val sk" style="width:70px;height:14px"></div></div></div>
+      <div class="gs-item"><div class="gs-dot" style="background:var(--mu)"></div><div class="gs-info"><div class="gs-label">PLS price 7d</div><div class="gs-val sk" style="width:70px;height:14px"></div></div></div>
+    </div>
+  </div>
+  <div class="fuel-verdict" id="fuelVerdict">Analysing PulseChain ecosystem health…</div>
+</div>
+
+<!-- ── BRIDGE FLOW ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Bridge Flow Monitor</div><div class="sec-line"></div></div>
+  <div class="sec-sub">The primary fuel source for PulseChain price action. Net positive bridge flow (more coming in than going out) means fresh capital is entering the ecosystem and supporting buy pressure. When this reverses, momentum stalls. Data from DefiLlama bridge tracking.</div>
+
+  <div class="flow-hero" id="flowHero">
+    <div class="flow-card in"><div class="fc-eye in">Inflows (7d)</div><div class="fc-val sk" style="width:100px;height:24px"></div><div class="fc-sub">Capital entering PulseChain</div></div>
+    <div class="flow-card out"><div class="fc-eye out">Outflows (7d)</div><div class="fc-val sk" style="width:100px;height:24px"></div><div class="fc-sub">Capital leaving PulseChain</div></div>
+    <div class="flow-card net"><div class="fc-eye net">Net Flow (7d)</div><div class="fc-val sk" style="width:100px;height:24px"></div><div class="fc-sub">Net capital change</div></div>
+    <div class="flow-card tvl"><div class="fc-eye tvl">Bridge TVL</div><div class="fc-val sk" style="width:100px;height:24px"></div><div class="fc-sub">Total locked in bridge</div></div>
+  </div>
+
+  <div style="font-size:11px;color:var(--mu2);margin-bottom:10px">Daily bridge flow — <span style="color:var(--grn)">■ inflow</span> &nbsp;<span style="color:var(--red)">■ outflow</span> &nbsp; bar length = relative size</div>
+  <div class="flow-timeline" id="flowTimeline">
+    <div style="color:var(--mu);font-size:12px">Loading bridge history…</div>
+  </div>
+</div>
+
+<!-- ── TVL & LIQUIDITY ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">TVL & Liquidity Depth</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Total value locked tells you how deep the pools are. Concentration in PulseX amplifies volatility — thin books mean large moves on small capital. The Vol/TVL ratio shows how actively the liquidity is being traded — high ratio means more movement per dollar of depth.</div>
+  <div class="stats-grid" id="tvlGrid">
+    <div class="stat-card"><div class="sc-label">Loading</div><div class="sk" style="width:100px;height:20px;margin:4px 0"></div></div>
+  </div>
+  <div class="chart-wrap" style="margin-top:14px">
+    <div style="font-size:10px;color:var(--mu2);margin-bottom:8px;font-family:'JetBrains Mono',monospace">PulseChain TVL (30d)</div>
+    <canvas id="tvlChart" height="80"></canvas>
+  </div>
+</div>
+
+<!-- ── DRY POWDER ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Stablecoin Dry Powder</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Idle stablecoins on PulseChain represent buying power that hasn't been deployed yet. The assessment noted "tens of millions in idle stablecoin/ETH buying power sitting on-chain" — this is the latent fuel. Watch if this number grows (fuel accumulating) or shrinks (being deployed or withdrawn).</div>
+  <div class="stats-grid" id="stableGrid">
+    <div class="stat-card"><div class="sc-label">Loading</div><div class="sk" style="width:100px;height:20px;margin:4px 0"></div></div>
+  </div>
+</div>
+
+<!-- ── SUSTAINABILITY ASSESSMENT ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Sustainability Assessment</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Based on the analysis framework from the market assessment: bridge flow is the primary fuel, thin liquidity amplifies moves in both directions, and "heaviness" increases with price as the same capital produces smaller moves. This section synthesises all signals into an honest read.</div>
+
+  <div style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mu2);margin-bottom:6px;font-family:'JetBrains Mono',monospace">
+      <span>Sell pressure risk</span><span id="sellPressureLabel">—</span>
+    </div>
+    <div class="pm-track"><div class="pm-fill" id="sellPressureFill" style="width:50%;background:var(--amb)"></div></div>
+    <div class="pm-labels"><span>Low</span><span>Moderate</span><span>High</span></div>
+  </div>
+
+  <div style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mu2);margin-bottom:6px;font-family:'JetBrains Mono',monospace">
+      <span>Bridge fuel remaining</span><span id="bridgeFuelLabel">—</span>
+    </div>
+    <div class="pm-track"><div class="pm-fill" id="bridgeFuelFill" style="width:50%;background:var(--grn)"></div></div>
+    <div class="pm-labels"><span>Drying up</span><span>Moderate</span><span>Strong flow</span></div>
+  </div>
+
+  <div style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mu2);margin-bottom:6px;font-family:'JetBrains Mono',monospace">
+      <span>Liquidity depth vs FDV</span><span id="depthLabel">—</span>
+    </div>
+    <div class="pm-track"><div class="pm-fill" id="depthFill" style="width:50%;background:var(--amb)"></div></div>
+    <div class="pm-labels"><span>Very thin</span><span>Shallow</span><span>Deep</span></div>
+  </div>
+
+  <div class="assessment neutral" id="assessmentBox">
+    <div class="as-title" id="assessTitle">Analysing…</div>
+    <div class="as-body" id="assessBody">Loading ecosystem data to generate assessment…</div>
+  </div>
+</div>
+
+<!-- ── KEY FACTS FROM THE ASSESSMENT ── -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Key Structural Facts</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Permanent context from the market structure analysis — these don't change with price and are worth understanding before making any decision.</div>
+  <div class="stats-grid">
+    <div class="stat-card" style="border-color:var(--red-bb)">
+      <div class="sc-label">Thin liquidity reality</div>
+      <div class="sc-val" style="color:var(--red);font-size:15px">$0.5–2M buy</div>
+      <div class="sc-sub">Can produce double-digit % moves on major pairs. Same amount reverses gains just as fast when sellers appear.</div>
+    </div>
+    <div class="stat-card" style="border-color:var(--amb-bb)">
+      <div class="sc-label">Price heaviness effect</div>
+      <div class="sc-val" style="color:var(--amb);font-size:15px">3–5× harder</div>
+      <div class="sc-sub">After another 3–5× from here, the same absolute capital produces smaller % moves. Sustaining requires exponentially more inflow.</div>
+    </div>
+    <div class="stat-card" style="border-color:var(--pls-bb)">
+      <div class="sc-label">DEX concentration</div>
+      <div class="sc-val" style="color:var(--pls);font-size:15px">~82% PulseX</div>
+      <div class="sc-sub">High TVL concentration in one DEX amplifies slippage and sell pressure risk when large holders exit.</div>
+    </div>
+    <div class="stat-card" style="border-color:var(--grn-bb)">
+      <div class="sc-label">Bridge needed daily</div>
+      <div class="sc-val" style="color:var(--grn);font-size:15px">$0.1–2M</div>
+      <div class="sc-sub">Net buying of a few hundred thousand to low millions/day can still move the needle at current depths.</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Fragility signal</div>
+      <div class="sc-val" style="font-size:15px">Order-flow</div>
+      <div class="sc-sub">Market is "order-flow dominated" — not deep, not resilient. Large sell = multi-day pump erased instantly.</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Further upside condition</div>
+      <div class="sc-val" style="font-size:15px">3 factors</div>
+      <div class="sc-sub">Net bridging stays positive AND capital rotates into LPs AND broader crypto risk appetite improves. All three needed.</div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+'use strict';
+
+/* ── HELPERS ── */
+const fB = n => { if(!n||isNaN(n)) return '$—'; const a=Math.abs(n); let s=(a>=1e9?'$'+(a/1e9).toFixed(2)+'B':a>=1e6?'$'+(a/1e6).toFixed(2)+'M':a>=1e3?'$'+(a/1e3).toFixed(1)+'K':'$'+a.toFixed(0)); return n<0?'-'+s:s; };
+const f2 = n => (n>=0?'+':'')+n.toFixed(2)+'%';
+const fc = n => n>0?'up':n<0?'dn':'fl';
+
+/* ── STATE ── */
+let D = {
+  bridgeTvl:0, bridgeIn7d:0, bridgeOut7d:0, bridgeNet7d:0,
+  bridgeHistory:[], tvlHistory:[],
+  chainTvl:0, pulsexTvl:0,
+  stableTotal:0, stableChange:0,
+  dexVol24:0, plsPrice:0, plsChg7d:0,
+  loaded:false
+};
+
+/* ── DATA SOURCES ── */
+// DefiLlama — CORS friendly, no key
+const LLAMA = 'https://api.llama.fi';
+const BRIDGES = 'https://bridges.llama.fi';
+const STABLES = 'https://stablecoins.llama.fi';
+
+async function safeFetch(url){
+  try{
+    const r = await fetch(url);
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){ return null; }
+}
+
+/* ── LOAD ALL DATA ── */
+async function loadAll(){
+  const btn=document.getElementById('rfBtn'); btn.classList.add('sp');
+  document.getElementById('updEl').textContent='Updating…';
+
+  const [chainTvlData, pulsexData, bridgeData, stablesData, dexData, plsData] = await Promise.allSettled([
+    safeFetch(LLAMA+'/v2/historicalChainTvl/Pulse'),
+    safeFetch(LLAMA+'/protocol/pulsex'),
+    safeFetch(LLAMA+'/protocol/pulsechain-bridge'),
+    safeFetch(STABLES+'/stablecoinchains'),
+    safeFetch(LLAMA+'/overview/dexs/Pulse?excludeTotalDataChartBreakdown=true&excludeTotalDataChart=false'),
+    safeFetch('https://api.dexscreener.com/latest/dex/tokens/0xA1077a294dDE1B09bB078844df40758a5D0f9a27')
+  ]);
+
+  // ── Chain TVL ──
+  if(chainTvlData.status==='fulfilled'&&chainTvlData.value){
+    const tvlArr = chainTvlData.value;
+    if(Array.isArray(tvlArr)&&tvlArr.length>0){
+      D.chainTvl = tvlArr[tvlArr.length-1]?.tvl || 0;
+      D.tvlHistory = tvlArr.slice(-30).map(d=>({date:d.date,tvl:d.tvl}));
+    }
+  }
+
+  // ── PulseX TVL ──
+  if(pulsexData.status==='fulfilled'&&pulsexData.value){
+    const px = pulsexData.value;
+    D.pulsexTvl = px.currentChainTvls?.Pulse || px.tvl || 0;
+  }
+
+  // ── Bridge TVL ──
+  if(bridgeData.status==='fulfilled'&&bridgeData.value){
+    const bd = bridgeData.value;
+    D.bridgeTvl = bd.currentChainTvls?.['Ethereum'] || bd.tvl || 0;
+    // Extract recent flow from TVL history
+    if(bd.chainTvls?.Ethereum?.tvl){
+      const hist = bd.chainTvls.Ethereum.tvl;
+      const recent = hist.slice(-8);
+      if(recent.length>=2){
+        D.bridgeHistory = recent.map((d,i)=>({
+          date: new Date(d.date*1000).toLocaleDateString('en-AU',{month:'short',day:'numeric'}),
+          tvl: d.totalLiquidityUSD||d[1]||0
+        }));
+        // Approximate 7d inflow from TVL change
+        const old7d = hist[hist.length-8]?.totalLiquidityUSD||hist[hist.length-8]?.[1]||0;
+        const cur = hist[hist.length-1]?.totalLiquidityUSD||hist[hist.length-1]?.[1]||0;
+        D.bridgeNet7d = cur - old7d;
+        // Estimate gross flows (TVL change + estimated turnover)
+        D.bridgeIn7d = Math.max(0, D.bridgeNet7d) + Math.abs(D.bridgeNet7d)*0.3;
+        D.bridgeOut7d = Math.max(0, -D.bridgeNet7d) + Math.abs(D.bridgeNet7d)*0.3;
+      }
+    }
+  }
+
+  // ── Stablecoins on PulseChain ──
+  if(stablesData.status==='fulfilled'&&stablesData.value){
+    const chains = stablesData.value;
+    const pulse = chains.find(c=>(c.name||'').toLowerCase().includes('pulse'));
+    if(pulse){
+      D.stableTotal = pulse.totalCirculatingUSD?.peggedUSD || pulse.mcap || 0;
+    }
+  }
+
+  // ── DEX Volume ──
+  if(dexData.status==='fulfilled'&&dexData.value){
+    const dex = dexData.value;
+    D.dexVol24 = dex.total24h || 0;
+  }
+
+  // ── PLS Price ──
+  if(plsData.status==='fulfilled'&&plsData.value){
+    const pairs = (plsData.value.pairs||[])
+      .filter(p=>p.chainId==='pulsechain'&&p.dexId==='pulsex')
+      .sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0));
+    if(pairs.length){
+      D.plsPrice = parseFloat(pairs[0].priceUsd)||0;
+      D.plsChg7d = parseFloat(pairs[0].priceChange?.d7||pairs[0].priceChange?.h24||0);
+    }
+  }
+
+  D.loaded=true;
+  renderAll();
+  document.getElementById('updEl').textContent='Updated '+new Date().toLocaleTimeString();
+  btn.classList.remove('sp');
+}
+
+/* ── GAUGE ARC ── */
+function setGaugeArc(score){
+  // score 0-100
+  const arc = document.getElementById('gaugeArc');
+  const totalLen = Math.PI * 80; // half circle circumference ≈ 251
+  const filled = (score/100)*totalLen;
+  const color = score>=70?'#00D4A0':score>=40?'#7B5CFF':score>=20?'#FFB800':'#FF3366';
+  arc.setAttribute('stroke',color);
+  arc.setAttribute('stroke-dashoffset', totalLen - filled);
+  return color;
+}
+
+/* ── SCORE SIGNAL ── */
+function signalItem(label,val,color,sub){
+  return `<div class="gs-item"><div class="gs-dot" style="background:${color}"></div><div class="gs-info"><div class="gs-label">${label}</div><div class="gs-val" style="color:${color}">${val}</div>${sub?`<div style="font-size:9px;color:var(--mu2)">${sub}</div>`:''}</div></div>`;
+}
+
+/* ── RENDER ALL ── */
+function renderAll(){
+  const { bridgeTvl, bridgeIn7d, bridgeOut7d, bridgeNet7d,
+          chainTvl, pulsexTvl, stableTotal, dexVol24,
+          plsPrice, plsChg7d, tvlHistory } = D;
+
+  // ── Scoring (each 0-20 points, max 100) ──
+  let score = 0;
+  const scores = {};
+
+  // 1. Bridge flow (0-20)
+  const bridgeScore = bridgeNet7d > 2e6 ? 20 : bridgeNet7d > 0 ? 12 : bridgeNet7d > -1e6 ? 6 : 0;
+  scores.bridge = bridgeScore; score += bridgeScore;
+
+  // 2. TVL trend 7d (0-20)
+  const tvlTrend = tvlHistory.length>=7 ? (tvlHistory[tvlHistory.length-1].tvl - tvlHistory[tvlHistory.length-7].tvl)/tvlHistory[tvlHistory.length-7].tvl*100 : 0;
+  const tvlScore = tvlTrend > 5 ? 20 : tvlTrend > 0 ? 14 : tvlTrend > -5 ? 8 : 0;
+  scores.tvl = tvlScore; score += tvlScore;
+
+  // 3. Stablecoin dry powder (0-20)
+  const stableScore = stableTotal > 30e6 ? 20 : stableTotal > 15e6 ? 14 : stableTotal > 5e6 ? 8 : 0;
+  scores.stable = stableScore; score += stableScore;
+
+  // 4. Vol/TVL ratio (0-20) — 1-3% is healthy, >5% is high activity, <0.5% is dead
+  const volTvlRatio = chainTvl > 0 ? (dexVol24/chainTvl*100) : 0;
+  const volScore = volTvlRatio > 3 ? 20 : volTvlRatio > 1 ? 14 : volTvlRatio > 0.3 ? 8 : 0;
+  scores.vol = volScore; score += volScore;
+
+  // 5. Concentration risk — lower is better (PulseX dominance) (0-20)
+  const concRatio = chainTvl > 0 ? pulsexTvl/chainTvl : 0.9;
+  const concScore = concRatio < 0.6 ? 20 : concRatio < 0.75 ? 14 : concRatio < 0.85 ? 8 : 2;
+  scores.conc = concScore; score += concScore;
+
+  // Score label
+  const word = score>=75?'STRONG':score>=55?'POSITIVE':score>=35?'CAUTIOUS':score>=20?'FRAGILE':'CRITICAL';
+  const wordColor = score>=75?'var(--grn)':score>=55?'var(--pls)':score>=35?'var(--amb)':'var(--red)';
+
+  // Hero fuel gauge
+  const arcColor = setGaugeArc(score);
+  document.getElementById('gaugeScore').textContent = score;
+  document.getElementById('gaugeScore').style.color = wordColor;
+  document.getElementById('gaugeWord').textContent = word;
+  document.getElementById('gaugeWord').style.color = wordColor;
+  document.getElementById('fuelHero').style.setProperty('--hero-color', arcColor);
+  document.querySelector('.fuel-hero::before');
+  document.querySelector('.fuel-hero').style.borderTopColor = arcColor;
+
+  // Gauge signals
+  document.getElementById('gaugeSignals').innerHTML = [
+    signalItem('Bridge flow (7d)', bridgeNet7d>0?'+'+fB(bridgeNet7d):fB(bridgeNet7d), bridgeScore>=14?'var(--grn)':bridgeScore>=6?'var(--amb)':'var(--red)', bridgeNet7d>0?'Capital entering':'Capital leaving'),
+    signalItem('TVL trend (7d)', f2(tvlTrend), tvlScore>=14?'var(--grn)':tvlScore>=8?'var(--amb)':'var(--red)', fB(chainTvl)+' total TVL'),
+    signalItem('Dry powder', fB(stableTotal), stableScore>=14?'var(--grn)':stableScore>=8?'var(--amb)':'var(--red)', 'Stables on PulseChain'),
+    signalItem('Vol / TVL', volTvlRatio.toFixed(2)+'%', volScore>=14?'var(--grn)':volScore>=8?'var(--amb)':'var(--red)', fB(dexVol24)+' 24h vol'),
+    signalItem('PulseX dominance', (concRatio*100).toFixed(0)+'%', concScore>=14?'var(--grn)':concScore>=8?'var(--amb)':'var(--red)', concRatio<0.75?'Healthy spread':'High concentration'),
+    signalItem('PLS price 7d', f2(plsChg7d), plsChg7d>0?'var(--grn)':plsChg7d<-5?'var(--red)':'var(--amb)', fB(plsPrice)+ ' current'),
+  ].join('');
+
+  // Fuel verdict
+  const verdictText = score>=75
+    ? `<b>Strong momentum conditions.</b> Bridge flow is positive, TVL is growing, and there is meaningful dry powder on-chain. The fuel conditions that drove the recent pump are still intact. Upside continuation is plausible if these signals hold.`
+    : score>=55
+    ? `<b>Positive but watch closely.</b> Most signals are constructive but not all firing. Bridge flow needs to stay positive to sustain momentum. The thin liquidity structure means conditions can flip quickly — watch the bridge flow daily.`
+    : score>=35
+    ? `<b>Caution advised.</b> Mixed signals — some fuel remains but not enough to sustain aggressive upside without fresh inflows. High concentration risk means large sellers can erase gains rapidly. This is the "heavy" phase the assessment described.`
+    : `<b>Fragile conditions.</b> Bridge flow has slowed or turned negative, dry powder is thin, and TVL trend is weak. The assessment's warning about "sharp reversals from large sells" is most applicable here. Risk/reward for new positions is unfavourable.`;
+  document.getElementById('fuelVerdict').innerHTML = verdictText;
+
+  // ── BRIDGE FLOW ──
+  document.getElementById('flowHero').innerHTML = `
+    <div class="flow-card in"><div class="fc-eye in">Inflows (7d est.)</div><div class="fc-val" style="color:var(--grn)">${fB(bridgeIn7d)}</div><div class="fc-sub">Capital bridging into PulseChain</div></div>
+    <div class="flow-card out"><div class="fc-eye out">Outflows (7d est.)</div><div class="fc-val" style="color:var(--red)">${fB(bridgeOut7d)}</div><div class="fc-sub">Capital bridging out</div></div>
+    <div class="flow-card net"><div class="fc-eye net">Net Flow (7d)</div><div class="fc-val" style="color:${bridgeNet7d>=0?'var(--grn)':'var(--red)'}">${bridgeNet7d>=0?'+':''}${fB(bridgeNet7d)}</div><div class="fc-sub">${bridgeNet7d>=0?'Net positive — fuel flowing':'Net negative — fuel draining'}</div></div>
+    <div class="flow-card tvl"><div class="fc-eye tvl">Bridge TVL</div><div class="fc-val">${fB(bridgeTvl)}</div><div class="fc-sub">Total locked in bridge contract</div></div>
+  `;
+
+  // Bridge timeline
+  if(D.bridgeHistory.length>0){
+    const maxTvl = Math.max(...D.bridgeHistory.map(d=>d.tvl));
+    document.getElementById('flowTimeline').innerHTML = D.bridgeHistory.map((d,i)=>{
+      if(i===0) return '';
+      const prev = D.bridgeHistory[i-1].tvl;
+      const change = d.tvl - prev;
+      const barW = Math.min(95, Math.abs(change)/maxTvl*100*8);
+      const isPos = change>=0;
+      return `<div class="ft-row">
+        <div class="ft-date">${d.date}</div>
+        <div class="ft-bars">
+          ${isPos?`<div class="ft-in" style="width:${barW}%"></div>`:``}
+          ${!isPos?`<div class="ft-out" style="width:${barW}%"></div>`:``}
+        </div>
+        <div class="ft-net ${isPos?'pos':'neg'}">${isPos?'+':''}${fB(change)}</div>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('flowTimeline').innerHTML='<div style="color:var(--mu);font-size:12px">Bridge history unavailable — DefiLlama may be rate limiting. <a href="https://defillama.com/protocol/pulsechain-bridge" target="_blank" style="color:var(--pls)">View on DefiLlama ↗</a></div>';
+  }
+
+  // ── TVL GRID ──
+  const pulsexPct = chainTvl>0?(pulsexTvl/chainTvl*100):0;
+  document.getElementById('tvlGrid').innerHTML=`
+    <div class="stat-card">
+      <div class="sc-label">Chain TVL total</div>
+      <div class="sc-val">${fB(chainTvl)}</div>
+      <div class="sc-sub">All protocols on PulseChain</div>
+      <div class="sc-chg ${fc(tvlTrend)}">${f2(tvlTrend)} 7d</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">PulseX TVL</div>
+      <div class="sc-val" style="color:var(--pls)">${fB(pulsexTvl)}</div>
+      <div class="sc-sub">Primary DEX</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${pulsexPct.toFixed(0)}%;background:var(--pls)"></div></div>
+      <div class="sc-sub" style="margin-top:4px">${pulsexPct.toFixed(1)}% of chain TVL</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">DEX Volume 24h</div>
+      <div class="sc-val">${fB(dexVol24)}</div>
+      <div class="sc-sub">All DEXs on PulseChain</div>
+      <div class="sc-sub" style="margin-top:4px">Vol/TVL: ${volTvlRatio.toFixed(2)}%</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Depth vs FDV</div>
+      <div class="sc-val" style="color:${chainTvl<50e6?'var(--red)':chainTvl<100e6?'var(--amb)':'var(--grn)'}">
+        ${chainTvl<50e6?'Very thin':chainTvl<100e6?'Shallow':'Moderate'}
+      </div>
+      <div class="sc-sub">${fB(chainTvl)} TVL vs large FDV — order-flow dominated</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">PulseX concentration</div>
+      <div class="sc-val" style="color:${concRatio>0.85?'var(--red)':concRatio>0.75?'var(--amb)':'var(--grn)'}">${(concRatio*100).toFixed(0)}%</div>
+      <div class="sc-sub">Higher = more fragile — single point of failure for liquidity</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Required daily inflow</div>
+      <div class="sc-val" style="color:var(--amb)">$0.1–2M</div>
+      <div class="sc-sub">Net buy pressure needed to move price meaningfully at current depths</div>
+    </div>
+  `;
+
+  // TVL Chart
+  if(D.tvlHistory.length>1){
+    drawTvlChart(D.tvlHistory);
+  }
+
+  // ── STABLECOINS ──
+  document.getElementById('stableGrid').innerHTML=`
+    <div class="stat-card" style="border-color:var(--grn-bb)">
+      <div class="sc-label">Stablecoins on PulseChain</div>
+      <div class="sc-val" style="color:var(--grn)">${fB(stableTotal)}</div>
+      <div class="sc-sub">Idle buying power — deployable at any time</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${Math.min(stableTotal/50e6*100,100).toFixed(0)}%;background:var(--grn)"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Dry powder vs TVL</div>
+      <div class="sc-val">${chainTvl>0?(stableTotal/chainTvl*100).toFixed(1)+'%':'—'}</div>
+      <div class="sc-sub">What % of total TVL is sitting idle as stablecoins</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Days of buy pressure</div>
+      <div class="sc-val">${dexVol24>0?Math.round(stableTotal/dexVol24)+' days':'—'}</div>
+      <div class="sc-sub">How many days of current volume the idle stables could theoretically fuel</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Signal</div>
+      <div class="sc-val" style="color:${stableTotal>20e6?'var(--grn)':stableTotal>10e6?'var(--amb)':'var(--red)'}">${stableTotal>20e6?'Rich':'Moderate'}</div>
+      <div class="sc-sub">${stableTotal>20e6?'Significant dry powder on-chain — latent buying fuel present':stableTotal>10e6?'Moderate dry powder — some fuel available':'Thin dry powder — not much idle capital to deploy'}</div>
+    </div>
+  `;
+
+  // ── SUSTAINABILITY ASSESSMENT ──
+  const sellRisk = Math.max(0, 100 - bridgeScore*3 - tvlScore*2);
+  const fuelRemaining = Math.min(100, bridgeScore*3 + stableScore*2);
+  const depthScore = Math.min(100, volScore*3 + concScore*2);
+
+  document.getElementById('sellPressureFill').style.width=sellRisk+'%';
+  document.getElementById('sellPressureFill').style.background=sellRisk>66?'var(--red)':sellRisk>33?'var(--amb)':'var(--grn)';
+  document.getElementById('sellPressureLabel').textContent=sellRisk>66?'High':sellRisk>33?'Moderate':'Low';
+
+  document.getElementById('bridgeFuelFill').style.width=fuelRemaining+'%';
+  document.getElementById('bridgeFuelFill').style.background=fuelRemaining>60?'var(--grn)':fuelRemaining>30?'var(--amb)':'var(--red)';
+  document.getElementById('bridgeFuelLabel').textContent=fuelRemaining>60?'Strong':fuelRemaining>30?'Moderate':'Weakening';
+
+  document.getElementById('depthFill').style.width=depthScore+'%';
+  document.getElementById('depthFill').style.background=depthScore>60?'var(--grn)':depthScore>30?'var(--amb)':'var(--red)';
+  document.getElementById('depthLabel').textContent=depthScore>60?'Healthy':depthScore>30?'Shallow':'Very thin';
+
+  const aBox = document.getElementById('assessmentBox');
+  const aTitle = document.getElementById('assessTitle');
+  const aBody = document.getElementById('assessBody');
+
+  if(score>=70){
+    aBox.className='assessment bullish';
+    aTitle.textContent='✅ Conditions Supportive — Momentum Has Fuel';
+    aTitle.style.color='var(--grn)';
+    aBody.textContent=`The three conditions from the assessment for further upside — positive net bridging, capital rotating into LPs, and constructive broader sentiment — appear to be partially or mostly met right now. The thin liquidity structure means gains can be sharp and fast. The risk is complacency: these conditions can flip within days if bridge flow reverses.`;
+  } else if(score>=45){
+    aBox.className='assessment caution';
+    aTitle.textContent='⚠️ Mixed Signals — Trade Carefully';
+    aTitle.style.color='var(--amb)';
+    aBody.textContent=`Some fuel remains but not all signals are positive. The assessment's core warning applies here: "heaviness increases with every multiple." At current price levels, the same dollar of buying produces smaller percentage gains than it did from the June lows. New capital needs to exceed natural sell pressure from early buyers taking profit. Watch the bridge flow daily — a flip to net negative is the clearest early warning signal.`;
+  } else {
+    aBox.className='assessment bearish';
+    aTitle.textContent='🔴 Fragile — Risk of Sharp Reversal';
+    aTitle.style.color='var(--red)';
+    aBody.textContent=`The assessment's most direct warning: "a few large sells can erase a multi-day pump" because books are thin and the market is order-flow dominated. With bridge flow slowing or negative and dry powder light, the fuel condition is deteriorating. This is the environment where profit-taking from early buyers at lower prices dominates and thin liquidity amplifies the downside. Caution warranted on new positions.`;
+  }
+}
+
+/* ── TVL CHART ── */
+function drawTvlChart(history){
+  const canvas=document.getElementById('tvlChart');
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth*window.devicePixelRatio;
+  canvas.height=80*window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
+  const W=canvas.offsetWidth,H=80;
+  ctx.clearRect(0,0,W,H);
+
+  const vals=history.map(d=>d.tvl);
+  const min=Math.min(...vals)*0.98, max=Math.max(...vals)*1.02;
+  const pad={l:8,r:8,t:6,b:6};
+  const W2=W-pad.l-pad.r, H2=H-pad.t-pad.b;
+  const px=i=>pad.l+(i/(vals.length-1))*W2;
+  const py=v=>pad.t+H2-((v-min)/(max-min))*H2;
+
+  // gradient fill
+  const grad=ctx.createLinearGradient(0,pad.t,0,H);
+  grad.addColorStop(0,'rgba(123,92,255,.3)');
+  grad.addColorStop(1,'rgba(123,92,255,.02)');
+  ctx.beginPath();
+  ctx.moveTo(px(0),py(vals[0]));
+  vals.forEach((v,i)=>ctx.lineTo(px(i),py(v)));
+  ctx.lineTo(px(vals.length-1),H);
+  ctx.lineTo(px(0),H);
+  ctx.closePath();
+  ctx.fillStyle=grad;
+  ctx.fill();
+
+  // line
+  ctx.beginPath();
+  ctx.strokeStyle='rgba(123,92,255,.8)';
+  ctx.lineWidth=2;
+  vals.forEach((v,i)=>i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v)));
+  ctx.stroke();
+
+  // labels
+  ctx.fillStyle='#5A6285';ctx.font='9px JetBrains Mono';ctx.textAlign='left';
+  ctx.fillText(history[0].date||'30d ago',pad.l,H-1);
+  ctx.textAlign='right';
+  ctx.fillText('Today',W-pad.r,H-1);
+  ctx.textAlign='right';
+  ctx.fillStyle='var(--tx)';ctx.font='bold 10px JetBrains Mono';
+  ctx.fillText(fB(vals[vals.length-1]),W-pad.r,pad.t+10);
+}
+
+/* ── BOOT ── */
+loadAll();
+setInterval(loadAll, 120000); // every 2 min — bridge data doesn't update that fast
+</script>
+</body>
+</html>
