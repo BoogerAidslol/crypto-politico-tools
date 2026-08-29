@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token Rotation Tracker — PulseChain</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060A;--s1:#0A0C14;--s2:#0F1220;--s3:#14182A;
+  --prvx:#FFB800;--prvx-b:rgba(255,184,0,.13);--prvx-bb:rgba(255,184,0,.3);
+  --wpls:#7B5CFF;--wpls-b:rgba(123,92,255,.13);--wpls-bb:rgba(123,92,255,.3);
+  --hex:#FF2D78;--hex-b:rgba(255,45,120,.13);--hex-bb:rgba(255,45,120,.3);
+  --plsx:#3B82F6;--plsx-b:rgba(59,130,246,.13);--plsx-bb:rgba(59,130,246,.3);
+  --inc:#00D4A0;--inc-b:rgba(0,212,160,.13);--inc-bb:rgba(0,212,160,.3);
+  --stable:#5A6285;--stable-b:rgba(90,98,133,.13);
+  --grn:#00D4A0;--grn-b:rgba(0,212,160,.12);--grn-bb:rgba(0,212,160,.28);
+  --red:#FF3366;--red-b:rgba(255,51,102,.12);
+  --tx:#DDE2F2;--mu:#404866;--mu2:#5A6285;--br:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'Space Grotesk',sans-serif;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:13px 26px;border-bottom:1px solid var(--br);background:rgba(5,6,10,.95);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:10px}
+.brand{font-size:15px;font-weight:800}
+.brand .t{color:var(--prvx)}.brand .d{color:var(--mu)}.brand .p{color:var(--wpls)}
+.topright{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.live-pill{display:flex;align-items:center;gap:5px;background:var(--grn-b);border:1px solid var(--grn-bb);color:var(--grn);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:bk 1.4s ease infinite}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+.upd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mu2)}
+.rfbtn{background:var(--wpls-b);border:1px solid var(--wpls-bb);color:var(--wpls);padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif}
+.rfbtn.sp .spin{animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+main{max-width:1360px;margin:0 auto;padding:22px 22px 60px}
+
+/* ── HOW IT WORKS ── */
+.how{background:var(--s1);border:1px solid var(--br);border-radius:14px;padding:14px 18px;margin-bottom:18px;font-size:12px;color:var(--mu2);line-height:1.7}
+.how b{color:var(--tx)}
+
+/* ── HEADLINE NUMBERS ── */
+.headlines{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.hl{background:var(--s1);border:1px solid var(--br);border-radius:14px;padding:16px 18px;border-top:2px solid transparent}
+.hl.prvx{border-top-color:var(--prvx)}.hl.grn{border-top-color:var(--grn)}.hl.wpls{border-top-color:var(--wpls)}.hl.hex{border-top-color:var(--hex)}
+.hl-label{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--mu2);text-transform:uppercase;margin-bottom:6px}
+.hl-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--tx)}
+.hl-sub{font-size:10px;color:var(--mu2);margin-top:4px}
+
+/* ── SECTION ── */
+.sec{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:22px;margin-bottom:18px}
+.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sec-title{font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--mu2);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--br)}
+.sec-sub{font-size:12px;color:var(--mu2);margin-bottom:16px;line-height:1.7}
+
+/* ── SANKEY WRAPPER ── */
+#sankeyWrap{width:100%;overflow:hidden;border-radius:10px;background:var(--s2)}
+svg text{font-family:'Space Grotesk',sans-serif}
+
+/* ── TOKEN LEGEND ── */
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mu2)}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* ── FLOW TABLE ── */
+table.flow{width:100%;border-collapse:collapse}
+table.flow th{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--br);text-align:left;white-space:nowrap}
+table.flow th:not(:first-child){text-align:right}
+table.flow td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:12px}
+table.flow td:not(:first-child){text-align:right}
+table.flow tr:hover td{background:var(--s2)}
+table.flow tr:last-child td{border-bottom:none}
+.arrow-cell{display:flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif}
+.tok-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;font-family:'Space Grotesk',sans-serif}
+.sold-tag{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;font-family:'Space Grotesk',sans-serif}
+.sold-tag.sell{background:var(--red-b);color:var(--red)}.sold-tag.buy{background:var(--grn-b);color:var(--grn)}
+.vol-bar-wrap{display:flex;align-items:center;gap:6px}
+.vol-bar{height:4px;border-radius:4px;min-width:4px;max-width:100px}
+
+/* ── SK ── */
+.sk{background:var(--s3);border-radius:4px;animation:sh 1.6s infinite;display:inline-block}
+@keyframes sh{0%,100%{opacity:.4}50%{opacity:.7}}
+
+@media(max-width:640px){main{padding:14px 14px 40px}.topbar{padding:11px 14px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="t">Token Rotation</span><span class="d"> · </span><span class="p">PulseChain Flow</span></div>
+  <div class="topright">
+    <div class="live-pill"><div class="live-dot"></div>LIVE 24H</div>
+    <span class="upd" id="updEl">Loading…</span>
+    <button class="rfbtn" id="rfBtn" onclick="loadAll()"><span class="spin">↻</span> Refresh</button>
+  </div>
+</div>
+
+<main>
+
+<div class="how">
+  <b>What this shows:</b> Where money is moving between the PulseChain core tokens in the last 24 hours. Thick arrows = more value. The question it answers: <b>"Did PRVX selling fund HEX / PLSX / INC buys?"</b>
+  Data is from DexScreener — buy and sell volume per pair, approximated into directional flow. Not exact wallet tracking. Refreshed live.
+</div>
+
+<!-- HEADLINE NUMBERS -->
+<div class="headlines">
+  <div class="hl prvx"><div class="hl-label">PRVX sold (24h)</div><div class="hl-val" id="hlPrvxSold"><span class="sk" style="width:80px;height:22px"></span></div><div class="hl-sub" id="hlPrvxSoldSub">—</div></div>
+  <div class="hl grn"><div class="hl-label">Core tokens bought</div><div class="hl-val" id="hlCoresBought"><span class="sk" style="width:80px;height:22px"></span></div><div class="hl-sub">HEX + PLSX + INC buys</div></div>
+  <div class="hl wpls"><div class="hl-label">Rotation ratio</div><div class="hl-val" id="hlRatio"><span class="sk" style="width:60px;height:22px"></span></div><div class="hl-sub">Cores bought per $ PRVX sold</div></div>
+  <div class="hl hex"><div class="hl-label">Total tracked volume</div><div class="hl-val" id="hlTotal"><span class="sk" style="width:80px;height:22px"></span></div><div class="hl-sub">All core pair activity 24h</div></div>
+</div>
+
+<!-- SANKEY -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Money Flow — Sankey Diagram</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Arrow thickness = USD volume. Left = tokens being sold. Right = tokens being bought. WPLS sits in the middle as the main routing hub for most swaps on PulseX.</div>
+  <div class="legend" id="legendEl"></div>
+  <div id="sankeyWrap"><div style="padding:40px;text-align:center;color:var(--mu)">Building flow diagram…</div></div>
+</div>
+
+<!-- FLOW TABLE -->
+<div class="sec">
+  <div class="sec-hd"><div class="sec-title">Flow Table — Last 24 Hours</div><div class="sec-line"></div></div>
+  <div class="sec-sub">Sorted by volume. "Est. traders" = approximate number of swap transactions. Note: a single wallet can make multiple swaps.</div>
+  <div style="overflow-x:auto">
+    <table class="flow">
+      <thead>
+        <tr>
+          <th>From → To</th>
+          <th>Volume 24h</th>
+          <th>Est. traders</th>
+          <th>Signal</th>
+          <th>% of total</th>
+        </tr>
+      </thead>
+      <tbody id="flowBody">
+        <tr><td colspan="5" style="padding:20px;color:var(--mu)">Loading flow data…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- NARRATIVE -->
+<div class="sec" id="narrativeSec">
+  <div class="sec-hd"><div class="sec-title">Today's Rotation Story</div><div class="sec-line"></div></div>
+  <div id="narrativeText" style="font-size:13px;color:var(--mu2);line-height:1.9">Analysing flow patterns…</div>
+</div>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+'use strict';
+
+/* ── TOKEN REGISTRY ── */
+const TOKENS = {
+  PRVX:  { addr:'0xf6f8db0aba00007681f8faf16a0fda1c9b030b11', color:'#FFB800', label:'PRVX' },
+  WPLS:  { addr:'0xA1077a294dDE1B09bB078844df40758a5D0f9a27', color:'#7B5CFF', label:'WPLS' },
+  HEX:   { addr:'0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39', color:'#FF2D78', label:'HEX'  },
+  PLSX:  { addr:'0x95B303987A60C71504D99Aa1b13B4DA07b0790ab', color:'#3B82F6', label:'PLSX' },
+  INC:   { addr:'0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d', color:'#00D4A0', label:'INC'  },
+};
+const STABLE_SYMBOLS = ['USDC','DAI','USDT','USDL','FRAX','LUSD'];
+const CORE_SYMBOLS   = ['HEX','PLSX','INC'];
+const TOKEN_ADDRS    = Object.values(TOKENS).map(t=>t.addr.toLowerCase());
+
+/* ── HELPERS ── */
+const fB = n => { if(!n||isNaN(n)) return '$—'; const a=Math.abs(n); let s=a>=1e6?'$'+(a/1e6).toFixed(2)+'M':a>=1e3?'$'+(a/1e3).toFixed(1)+'K':'$'+a.toFixed(0); return n<0?'-'+s:s; };
+const fN = n => n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':Math.round(n).toString();
+const tokColor = sym => Object.values(TOKENS).find(t=>t.label===sym)?.color || '#5A6285';
+
+/* ── STATE ── */
+let flows = {}; // key: "FROM→TO", value: {from, to, volume, txns}
+
+function addFlow(from, to, volume, txns){
+  if(volume < 100) return; // ignore dust
+  if(from === to) return;
+  const key = `${from}→${to}`;
+  if(!flows[key]) flows[key] = { from, to, volume:0, txns:0 };
+  flows[key].volume += volume;
+  flows[key].txns   += txns;
+}
+
+/* ── FETCH PAIRS FOR ONE TOKEN ── */
+async function fetchTokenPairs(tokenSymbol, tokenAddr){
+  try{
+    const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/'+tokenAddr);
+    const d = await r.json();
+    const pairs = (d.pairs||[])
+      .filter(p => p.chainId==='pulsechain' && (p.volume?.h24||0)>500)
+      .sort((a,b)=>(b.volume?.h24||0)-(a.volume?.h24||0))
+      .slice(0,8);
+
+    pairs.forEach(pair=>{
+      const baseSymbol  = pair.baseToken?.symbol  || '';
+      const quoteSymbol = pair.quoteToken?.symbol || '';
+      const baseAddr    = (pair.baseToken?.address||'').toLowerCase();
+      const quoteAddr   = (pair.quoteToken?.address||'').toLowerCase();
+
+      const vol    = pair.volume?.h24 || 0;
+      const buys   = pair.txns?.h24?.buys  || 0;
+      const sells  = pair.txns?.h24?.sells || 0;
+      const total  = buys + sells || 1;
+      const buyVol  = vol * buys  / total;
+      const sellVol = vol * sells / total;
+
+      // Determine the "other" token category
+      const isBaseOurToken  = baseAddr  === tokenAddr.toLowerCase();
+      const isQuoteOurToken = quoteAddr === tokenAddr.toLowerCase();
+
+      // Figure out the other token's label
+      let otherSymbol = isBaseOurToken ? quoteSymbol : baseSymbol;
+      // Normalise stables
+      if(STABLE_SYMBOLS.includes(otherSymbol)) otherSymbol = 'STABLES';
+      // Check if other token is a known core token
+      const otherIsKnown = Object.values(TOKENS).some(t=>t.label===otherSymbol) || otherSymbol==='STABLES';
+      if(!otherIsKnown) otherSymbol = 'OTHER';
+
+      if(isBaseOurToken){
+        // Sells of our token → flows to other
+        addFlow(tokenSymbol, otherSymbol, sellVol, sells);
+        // Buys of our token ← comes from other
+        addFlow(otherSymbol, tokenSymbol, buyVol, buys);
+      } else if(isQuoteOurToken){
+        // When our token is quote, DexScreener buys/sells are for the BASE
+        // Base bought = our token sold (as quote)
+        addFlow(tokenSymbol, otherSymbol, buyVol, buys);
+        // Base sold = our token bought (as quote)
+        addFlow(otherSymbol, tokenSymbol, sellVol, sells);
+      }
+    });
+  }catch(e){}
+}
+
+/* ── LOAD ALL ── */
+async function loadAll(){
+  const btn=document.getElementById('rfBtn'); btn.classList.add('sp');
+  document.getElementById('updEl').textContent='Loading…';
+  flows = {};
+
+  await Promise.allSettled(
+    Object.entries(TOKENS).map(([sym,tok]) => fetchTokenPairs(sym, tok.addr))
+  );
+
+  renderAll();
+  document.getElementById('updEl').textContent='Updated '+new Date().toLocaleTimeString();
+  btn.classList.remove('sp');
+}
+
+/* ── RENDER ALL ── */
+function renderAll(){
+  const flowArr = Object.values(flows)
+    .filter(f=>f.volume>100)
+    .sort((a,b)=>b.volume-a.volume);
+
+  const totalVol = flowArr.reduce((s,f)=>s+f.volume,0);
+
+  // Headline numbers
+  const prvxSold   = flowArr.filter(f=>f.from==='PRVX').reduce((s,f)=>s+f.volume,0);
+  const coresBought= flowArr.filter(f=>CORE_SYMBOLS.includes(f.to)).reduce((s,f)=>s+f.volume,0);
+  const ratio      = prvxSold>0 ? (coresBought/prvxSold).toFixed(2) : '—';
+
+  document.getElementById('hlPrvxSold').textContent     = fB(prvxSold);
+  document.getElementById('hlPrvxSoldSub').textContent  = fN(flowArr.filter(f=>f.from==='PRVX').reduce((s,f)=>s+f.txns,0))+' sell txns';
+  document.getElementById('hlCoresBought').textContent  = fB(coresBought);
+  document.getElementById('hlRatio').textContent        = ratio+'×';
+  document.getElementById('hlTotal').textContent        = fB(totalVol);
+
+  renderLegend();
+  renderSankey(flowArr, totalVol);
+  renderTable(flowArr, totalVol);
+  renderNarrative(flowArr, prvxSold, coresBought, ratio);
+}
+
+/* ── LEGEND ── */
+function renderLegend(){
+  const tokens = ['PRVX','WPLS','HEX','PLSX','INC','STABLES'];
+  const colors = { PRVX:'#FFB800',WPLS:'#7B5CFF',HEX:'#FF2D78',PLSX:'#3B82F6',INC:'#00D4A0',STABLES:'#5A6285',OTHER:'#333' };
+  document.getElementById('legendEl').innerHTML = tokens.map(t=>
+    `<div class="leg-item"><div class="leg-dot" style="background:${colors[t]}"></div>${t}</div>`
+  ).join('');
+}
+
+/* ── SANKEY ── */
+function renderSankey(flowArr, totalVol){
+  const wrap = document.getElementById('sankeyWrap');
+  const W = wrap.clientWidth || 800;
+  const H = Math.max(320, Math.min(480, W * 0.45));
+  const PAD = { t:30, b:30, l:80, r:80 };
+  const innerW = W - PAD.l - PAD.r;
+  const innerH = H - PAD.t - PAD.b;
+
+  const colors = { PRVX:'#FFB800',WPLS:'#7B5CFF',HEX:'#FF2D78',PLSX:'#3B82F6',INC:'#00D4A0',STABLES:'#5A6285',OTHER:'#333744' };
+
+  // Define columns — fixed layout tells the story cleanly
+  const COL_DEFS = [
+    { x:0,           tokens:['PRVX'] },
+    { x:innerW*0.42, tokens:['WPLS','STABLES','OTHER'] },
+    { x:innerW,      tokens:['HEX','PLSX','INC'] },
+  ];
+
+  // Calculate node volumes (only nodes that appear in flows)
+  const nodeVol = {};
+  flowArr.forEach(f=>{
+    nodeVol[f.from] = (nodeVol[f.from]||0) + f.volume;
+    nodeVol[f.to]   = (nodeVol[f.to]  ||0) + f.volume;
+  });
+
+  // Position nodes per column
+  const nodes = {};
+  const NODE_W = Math.max(14, W*0.018);
+  const NODE_GAP = 12;
+
+  COL_DEFS.forEach(col=>{
+    const active = col.tokens.filter(t => nodeVol[t]>0);
+    if(active.length===0) return;
+    const maxVol = Math.max(...active.map(t=>nodeVol[t]||1));
+    const baseH  = innerH / active.length - NODE_GAP;
+    const totalH = active.reduce((s,t)=>s+Math.max(20,(nodeVol[t]||0)/maxVol*baseH),0) + (active.length-1)*NODE_GAP;
+    let y = (innerH - totalH)/2;
+    active.forEach(tok=>{
+      const h = Math.max(20, (nodeVol[tok]||0)/maxVol*baseH);
+      nodes[tok] = { x:col.x, y, h, w:NODE_W, color:colors[tok]||'#333' };
+      y += h + NODE_GAP;
+    });
+  });
+
+  // Track link offsets for stacking at nodes
+  const srcOffset = {}, dstOffset = {};
+  Object.keys(nodes).forEach(n=>{ srcOffset[n]=0; dstOffset[n]=0; });
+
+  // Only draw flows above threshold
+  const maxVol = Math.max(...flowArr.map(f=>f.volume), 1);
+  const MIN_LINK_W = 2;
+  const MAX_LINK_W = Math.min(innerH * 0.2, 40);
+
+  const svg = d3.create('svg')
+    .attr('viewBox',`0 0 ${W} ${H}`)
+    .attr('width',W).attr('height',H)
+    .style('background','#0F1220');
+
+  const g = svg.append('g').attr('transform',`translate(${PAD.l},${PAD.t})`);
+
+  // Draw links
+  flowArr
+    .filter(f => nodes[f.from] && nodes[f.to] && f.volume > totalVol*0.002)
+    .forEach(f=>{
+      const linkW = Math.max(MIN_LINK_W, (f.volume/maxVol)*MAX_LINK_W);
+      const src = nodes[f.from];
+      const dst = nodes[f.to];
+      if(!src||!dst) return;
+
+      const x0 = src.x + src.w;
+      const y0 = src.y + srcOffset[f.from] + linkW/2;
+      const x1 = dst.x;
+      const y1 = dst.y + dstOffset[f.to] + linkW/2;
+
+      srcOffset[f.from] += linkW;
+      dstOffset[f.to]   += linkW;
+
+      const mx = (x0+x1)/2;
+
+      // Gradient
+      const gradId = `grad-${f.from}-${f.to}`.replace(/[^a-zA-Z0-9-]/g,'');
+      const grad = svg.append('defs').append('linearGradient')
+        .attr('id',gradId).attr('gradientUnits','userSpaceOnUse')
+        .attr('x1',x0+PAD.l).attr('x2',x1+PAD.l);
+      grad.append('stop').attr('offset','0%').attr('stop-color',colors[f.from]||'#666').attr('stop-opacity',0.5);
+      grad.append('stop').attr('offset','100%').attr('stop-color',colors[f.to]||'#666').attr('stop-opacity',0.5);
+
+      g.append('path')
+        .attr('d',`M${x0},${y0} C${mx},${y0} ${mx},${y1} ${x1},${y1}`)
+        .attr('stroke',`url(#${gradId})`)
+        .attr('stroke-width', linkW)
+        .attr('fill','none')
+        .attr('opacity',0.7)
+        .append('title').text(`${f.from} → ${f.to}: ${fB(f.volume)}`);
+    });
+
+  // Draw nodes
+  Object.entries(nodes).forEach(([name, n])=>{
+    g.append('rect')
+      .attr('x',n.x).attr('y',n.y)
+      .attr('width',n.w).attr('height',n.h)
+      .attr('rx',4).attr('fill',n.color)
+      .attr('opacity',0.9)
+      .append('title').text(`${name}: ${fB(nodeVol[name]||0)}`);
+
+    // Label
+    const isRight = n.x > innerW * 0.6;
+    const isLeft  = n.x < innerW * 0.2;
+    const lx = isLeft ? n.x - 6 : isRight ? n.x + n.w + 6 : n.x + n.w/2;
+    const anchor = isLeft ? 'end' : isRight ? 'start' : 'middle';
+    g.append('text')
+      .attr('x', lx).attr('y', n.y + n.h/2)
+      .attr('dy','0.35em')
+      .attr('text-anchor', anchor)
+      .attr('font-size', Math.max(10, Math.min(13, W*0.013)))
+      .attr('font-weight','700')
+      .attr('fill', n.color)
+      .text(name);
+
+    // Volume label under node
+    g.append('text')
+      .attr('x', lx).attr('y', n.y + n.h/2 + 13)
+      .attr('dy','0.35em')
+      .attr('text-anchor', anchor)
+      .attr('font-size', 9)
+      .attr('fill','#5A6285')
+      .attr('font-family','JetBrains Mono')
+      .text(fB(nodeVol[name]||0));
+  });
+
+  // Column labels
+  [
+    {x:PAD.l/2, label:'Selling'},
+    {x:PAD.l + innerW*0.42 + NODE_W/2, label:'Hub'},
+    {x:W - PAD.r/2, label:'Buying'}
+  ].forEach(cl=>{
+    svg.append('text').attr('x',cl.x).attr('y',14)
+      .attr('text-anchor','middle').attr('font-size',9).attr('font-weight','700')
+      .attr('letter-spacing',1.5).attr('fill','#404866').attr('font-family','Space Grotesk')
+      .text(cl.label.toUpperCase());
+  });
+
+  wrap.innerHTML='';
+  wrap.appendChild(svg.node());
+}
+
+/* ── TABLE ── */
+function renderTable(flowArr, totalVol){
+  const colors = { PRVX:'#FFB800',WPLS:'#7B5CFF',HEX:'#FF2D78',PLSX:'#3B82F6',INC:'#00D4A0',STABLES:'#5A6285',OTHER:'#5A6285' };
+  const top = flowArr.filter(f=>!['OTHER'].includes(f.from)&&!['OTHER'].includes(f.to)).slice(0,20);
+  const maxVol = Math.max(...top.map(f=>f.volume),1);
+
+  document.getElementById('flowBody').innerHTML = top.map(f=>{
+    const pct = totalVol>0?(f.volume/totalVol*100).toFixed(1):'0';
+    const barW = Math.round(f.volume/maxVol*80);
+    const isSell = !CORE_SYMBOLS.includes(f.to);
+    const signal = CORE_SYMBOLS.includes(f.to)?'buy': f.from==='PRVX'?'sell':'other';
+    return `<tr>
+      <td>
+        <div class="arrow-cell">
+          <span class="tok-badge" style="background:${colors[f.from]||'#333'}22;color:${colors[f.from]||'#999'};border:1px solid ${colors[f.from]||'#333'}44">${f.from}</span>
+          <span style="color:var(--mu2)">→</span>
+          <span class="tok-badge" style="background:${colors[f.to]||'#333'}22;color:${colors[f.to]||'#999'};border:1px solid ${colors[f.to]||'#333'}44">${f.to}</span>
+        </div>
+      </td>
+      <td>
+        <div class="vol-bar-wrap">
+          <div class="vol-bar" style="width:${barW}px;background:${colors[f.from]||'#444'}66"></div>
+          <span>${fB(f.volume)}</span>
+        </div>
+      </td>
+      <td>${fN(f.txns)}</td>
+      <td><span class="sold-tag ${signal==='buy'?'buy':'sell'}">${signal==='buy'?'BUYING':'SELLING'}</span></td>
+      <td>${pct}%</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="padding:20px;color:var(--mu)">No flow data above threshold</td></tr>';
+}
+
+/* ── NARRATIVE ── */
+function renderNarrative(flowArr, prvxSold, coresBought, ratio){
+  const hexBought   = flowArr.filter(f=>f.to==='HEX').reduce((s,f)=>s+f.volume,0);
+  const plsxBought  = flowArr.filter(f=>f.to==='PLSX').reduce((s,f)=>s+f.volume,0);
+  const incBought   = flowArr.filter(f=>f.to==='INC').reduce((s,f)=>s+f.volume,0);
+  const prvxToWpls  = flowArr.find(f=>f.from==='PRVX'&&f.to==='WPLS')?.volume||0;
+  const prvxToStable= flowArr.find(f=>f.from==='PRVX'&&f.to==='STABLES')?.volume||0;
+  const wplsToHex   = flowArr.find(f=>f.from==='WPLS'&&f.to==='HEX')?.volume||0;
+  const biggestBuy  = flowArr.filter(f=>CORE_SYMBOLS.includes(f.to)).sort((a,b)=>b.volume-a.volume)[0];
+
+  const rotationStory = parseFloat(ratio) >= 0.5
+    ? `Significant rotation into core ecosystem tokens. For every dollar of PRVX sold, approximately <b style="color:var(--grn)">${ratio}×</b> flowed into HEX, PLSX, and INC buys — suggesting PRVX sellers are staying in the ecosystem rather than exiting to stables.`
+    : parseFloat(ratio) > 0
+    ? `Partial rotation — some PRVX sell proceeds are finding their way into core tokens, but a larger portion appears to be going to WPLS or stables rather than directly into HEX/PLSX/INC.`
+    : `Limited rotation signal today. Most volume is not showing a clear PRVX-to-cores pattern.`;
+
+  document.getElementById('narrativeText').innerHTML = `
+    <p style="margin-bottom:10px">
+      In the last 24 hours, <b style="color:var(--prvx)">${fB(prvxSold)}</b> of PRVX has been sold across all pairs.
+      Of that, approximately <b style="color:var(--wpls)">${fB(prvxToWpls)}</b> routed through WPLS and
+      <b style="color:var(--stable)">${fB(prvxToStable)}</b> went directly to stables.
+    </p>
+    <p style="margin-bottom:10px">
+      On the buying side: <b style="color:var(--hex)">${fB(hexBought)}</b> of HEX was bought,
+      <b style="color:var(--plsx)">${fB(plsxBought)}</b> of PLSX, and
+      <b style="color:var(--inc)">${fB(incBought)}</b> of INC.
+      ${wplsToHex>0?`WPLS → HEX was the largest single routing flow at <b style="color:var(--hex)">${fB(wplsToHex)}</b>.`:''}
+    </p>
+    <p style="margin-bottom:10px">${rotationStory}</p>
+    <p style="font-size:11px;color:var(--mu)">
+      Note: flow volumes are approximate — calculated from DexScreener buy/sell transaction ratios applied to pair volume.
+      Exact routing through WPLS is inferred, not directly traced at the wallet level.
+    </p>
+  `;
+}
+
+/* ── BOOT ── */
+loadAll();
+setInterval(loadAll, 300000); // refresh every 5 min — data is 24h rolling
+window.addEventListener('resize', ()=>{ renderSankey(Object.values(flows).filter(f=>f.volume>100).sort((a,b)=>b.volume-a.volume), Object.values(flows).reduce((s,f)=>s+f.volume,0)); });
+</script>
+</body>
+</html>
